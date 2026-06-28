@@ -969,6 +969,31 @@
     .lokasi-status-chip.di-lokasi { background: var(--success-50); color: var(--success-600); }
     .lokasi-status-chip.luar { background: var(--danger-50); color: var(--danger-600); }
 
+    /* Peta mini diagnosa lokasi (absen masuk/pulang) */
+    .peta-lokasi-wrap {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--gray-200);
+      margin-bottom: 12px;
+    }
+    .peta-lokasi-wrap iframe {
+      display: block;
+      width: 100%;
+      height: 160px;
+      border: 0;
+    }
+    .peta-lokasi-koordinat {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 10.5px;
+      color: var(--gray-500);
+      padding: 6px 10px;
+      background: var(--gray-50);
+      border-top: 1px solid var(--gray-200);
+    }
+    .peta-lokasi-koordinat span strong { color: var(--gray-700); }
+
     /* Foto preview area */
     .foto-capture-area {
       aspect-ratio: 4/3;
@@ -4160,7 +4185,7 @@ async function uploadFotoProfil(file) {
    ============================================================ */
 async function mulaiAplikasi() {
   try {
-    const { data: sekolahData } = await sb.from('data_sekolah').select('*').eq('id', 1).single();
+    const { data: sekolahData } = await sb.from('data_sekolah').select('*').eq('id', 1).maybeSingle();
     if (sekolahData) {
       APP.sekolah = sekolahData;
       const namaSekolah = sekolahData.nama_sekolah || 'Sistem Presensi Digital';
@@ -4273,8 +4298,37 @@ async function muatProfil() {
 
 async function muatDataSekolah() {
   if (APP.sekolah) return; // sudah dimuat saat splash
-  const { data } = await sb.from('data_sekolah').select('*').eq('id', 1).single();
+  const { data } = await sb.from('data_sekolah').select('*').eq('id', 1).maybeSingle();
   if (data) APP.sekolah = data;
+}
+
+/**
+ * Sama seperti muatDataSekolah(), TAPI selalu ambil ulang dari database
+ * tanpa peduli APP.sekolah sudah terisi atau belum.
+ *
+ * Kenapa perlu: APP.sekolah hanya diisi sekali saat splash/login, lalu
+ * dipakai terus selama sesi guru aktif (di memori, bukan localStorage).
+ * Kalau admin mengubah koordinat/radius sekolah SETELAH guru membuka
+ * aplikasi (dan guru tidak reload), guru akan tetap memakai koordinat
+ * LAMA → perhitungan jarak absen jadi salah / "jarak jauh padahal lokasi
+ * sama". Dipanggil setiap kali halaman Absen dibuka supaya datanya
+ * selalu segar.
+ */
+async function muatDataSekolahPaksa() {
+  try {
+    const { data, error } = await sb.from('data_sekolah').select('*').eq('id', 1).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (data) {
+      APP.sekolah = data;
+      // Lokasi sekolah baru sudah masuk — segarkan juga status radius
+      // di UI tanpa perlu menunggu update GPS watcher berikutnya.
+      updateStatusLokasiUI();
+    }
+  } catch (e) {
+    console.warn('Gagal menyegarkan data sekolah:', e.message);
+    // Tidak perlu toast — kalau gagal, APP.sekolah lama (jika ada) tetap
+    // dipakai sebagai fallback, supaya halaman absen tidak macet total.
+  }
 }
 
 /* ============================================================
@@ -4394,6 +4448,69 @@ function updateStatusLokasiUI() {
     btnKameraPulang.innerHTML = diLokasi
       ? `<span class="material-symbols-rounded">photo_camera</span> Buka Kamera`
       : `<span class="material-symbols-rounded">block</span> Di Luar Radius Sekolah`;
+  }
+
+  // Tampilkan peta diagnosa (titik sekolah vs titik guru) di kedua kartu,
+  // supaya kalau ada selisih jarak yang tidak wajar, guru/admin bisa
+  // langsung lihat dengan mata di peta — bukan cuma percaya angka meter.
+  updatePetaLokasi('masuk', jarak, batasRadius);
+  updatePetaLokasi('pulang', jarak, batasRadius);
+}
+
+/**
+ * Render peta mini (OpenStreetMap, tanpa perlu API key) yang menunjukkan
+ * titik sekolah (acuan admin) dan titik guru saat ini secara berdampingan,
+ * plus angka koordinat mentahnya sebagai teks. Tujuannya diagnosa visual:
+ * kalau jarak yang dihitung sistem terasa tidak wajar (misalnya jauh padahal
+ * guru merasa sudah di lokasi sekolah), peta ini langsung menunjukkan di
+ * mana sebenarnya titik GPS guru terdeteksi dibanding titik sekolah.
+ *
+ * tipe: 'masuk' | 'pulang' — menentukan iframe & elemen koordinat mana yang diisi.
+ */
+function updatePetaLokasi(tipe, jarakMeter, batasRadius) {
+  const iframeEl = document.getElementById(`peta-lokasi-${tipe}`);
+  const koorSekolahEl = document.getElementById(`koor-sekolah-${tipe}`);
+  const koorSayaEl = document.getElementById(`koor-saya-${tipe}`);
+  if (!iframeEl || !APP.sekolah || !APP.koordinatSaatIni) return;
+
+  const latS = Number(APP.sekolah.lat_sekolah);
+  const lngS = Number(APP.sekolah.lng_sekolah);
+  const latG = Number(APP.koordinatSaatIni.lat);
+  const lngG = Number(APP.koordinatSaatIni.lng);
+  if (!isFinite(latS) || !isFinite(lngS) || !isFinite(latG) || !isFinite(lngG)) return;
+
+  // Catatan: zoom/area peta dihitung otomatis oleh Leaflet (fitBounds di
+  // bawah), jadi tidak perlu hitung bounding box manual di sini.
+  // marker: titik sekolah (merah) dan titik guru (biru) — pakai Leaflet
+  // inline lewat srcdoc, karena OSM embed bawaan hanya mendukung SATU
+  // marker per URL. Dengan dua marker, selisih posisi langsung kelihatan
+  // di peta, bukan cuma angka jarak.
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>html,body,#map{height:100%;margin:0;padding:0;}</style>
+    </head><body><div id="map"></div>
+    <` + `script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><` + `/script>
+    <` + `script>
+      const sekolah = [${latS}, ${lngS}];
+      const guru = [${latG}, ${lngG}];
+      const map = L.map('map', { zoomControl: false, attributionControl: false });
+      map.fitBounds([sekolah, guru], { padding: [30, 30], maxZoom: 18 });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+      L.circleMarker(sekolah, { radius: 8, color: '#dc2626', fillColor: '#dc2626', fillOpacity: 0.9 })
+        .addTo(map).bindPopup('Lokasi Sekolah (acuan admin)');
+      L.circleMarker(guru, { radius: 8, color: '#2563eb', fillColor: '#2563eb', fillOpacity: 0.9 })
+        .addTo(map).bindPopup('Lokasi Anda saat ini');
+      L.polyline([sekolah, guru], { color: '#9ca3af', weight: 2, dashArray: '4,4' }).addTo(map);
+    <` + `/script></body></html>`;
+  if (iframeEl.dataset.lastHtml !== html) {
+    iframeEl.srcdoc = html;
+    iframeEl.dataset.lastHtml = html;
+  }
+
+  if (koorSekolahEl) koorSekolahEl.textContent = `${latS.toFixed(6)}, ${lngS.toFixed(6)}`;
+  if (koorSayaEl) {
+    koorSayaEl.textContent = `${latG.toFixed(6)}, ${lngG.toFixed(6)}`;
+    koorSayaEl.style.color = jarakMeter <= batasRadius ? 'var(--success-600)' : 'var(--danger-600)';
   }
 }
 
@@ -4759,6 +4876,13 @@ function renderTombolAbsen(absen) {
           </div>
           <div class="lokasi-status-chip di-lokasi" id="chip-lokasi-masuk">Mencari...</div>
         </div>
+        <div class="peta-lokasi-wrap">
+          <iframe id="peta-lokasi-masuk" loading="lazy" title="Peta lokasi absen masuk"></iframe>
+          <div class="peta-lokasi-koordinat">
+            <span>Sekolah: <strong id="koor-sekolah-masuk">-</strong></span>
+            <span>Anda: <strong id="koor-saya-masuk">-</strong></span>
+          </div>
+        </div>
         <button class="btn-refresh-radius" id="btn-refresh-radius-masuk" type="button" style="width:100%;margin-bottom:10px;padding:8px;border:1.5px dashed var(--gray-300);background:none;border-radius:var(--radius-md);font-size:12px;font-weight:600;color:var(--gray-600);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
           <span class="material-symbols-rounded" style="font-size:16px;">refresh</span> Refresh Lokasi
         </button>
@@ -4848,6 +4972,13 @@ function renderTombolAbsen(absen) {
               <span id="lokasi-pulang-sub">Mohon tunggu sebentar</span>
             </div>
             <div class="lokasi-status-chip di-lokasi" id="chip-lokasi-pulang">Mencari...</div>
+          </div>
+          <div class="peta-lokasi-wrap">
+            <iframe id="peta-lokasi-pulang" loading="lazy" title="Peta lokasi absen pulang"></iframe>
+            <div class="peta-lokasi-koordinat">
+              <span>Sekolah: <strong id="koor-sekolah-pulang">-</strong></span>
+              <span>Anda: <strong id="koor-saya-pulang">-</strong></span>
+            </div>
           </div>
           <button class="btn-refresh-radius" id="btn-refresh-radius-pulang" type="button" style="width:100%;margin-bottom:10px;padding:8px;border:1.5px dashed var(--gray-300);background:none;border-radius:var(--radius-md);font-size:12px;font-weight:600;color:var(--gray-600);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
             <span class="material-symbols-rounded" style="font-size:16px;">refresh</span> Refresh Lokasi
@@ -6969,7 +7100,11 @@ function initModals() {
   document.getElementById('close-modal-logout')?.addEventListener('click', () => tutupModal('modal-logout'));
   document.getElementById('btn-batal-logout')?.addEventListener('click', () => tutupModal('modal-logout'));
   document.getElementById('btn-konfirm-logout')?.addEventListener('click', async () => {
-    await sb.auth.signOut();
+    try {
+      await sb.auth.signOut({ scope: 'local' });
+    } catch (e) {
+      console.warn('signOut server error (diabaikan, lanjut logout lokal):', e.message);
+    }
     APP.user             = null;
     APP.profile           = null;
     APP.presensiHariIni   = null;
@@ -7071,6 +7206,7 @@ function initNavigasi() {
       tampilHalaman(page);
 
       if (page === 'absen') {
+        await muatDataSekolahPaksa();
         await muatPresensiHariIni();
         await muatRekapBulanIni();
       }
@@ -8445,7 +8581,7 @@ async function simpanEditAkun() {
    ============================================================ */
 async function muatFormDataSekolah() {
   try {
-    const { data, error } = await sb.from('data_sekolah').select('*').eq('id', 1).single();
+    const { data, error } = await sb.from('data_sekolah').select('*').eq('id', 1).maybeSingle();
     if (error) throw new Error(error.message);
 
     APP.sekolah = data || {};
