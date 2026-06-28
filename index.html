@@ -7,8 +7,8 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="PresensiGuru" />
-  <title>PresensiGuru</title>
+  <meta name="apple-mobile-web-app-title" content="SITABA" />
+  <title>SITABA — 16</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -1030,6 +1030,12 @@
       margin-bottom: 12px;
     }
     .btn-buka-kamera .material-symbols-rounded { font-size: 18px; }
+    .btn-buka-kamera:disabled {
+      background: var(--gray-100);
+      color: var(--gray-400);
+      border-color: var(--gray-200);
+      cursor: not-allowed;
+    }
 
     /* Tombol absen */
     .btn-absen-masuk {
@@ -2232,16 +2238,17 @@
   ================================================================ -->
   <div class="page active" id="page-login">
     <div class="login-header">
-      <div class="login-logo">
+      <div class="login-logo" id="login-logo">
         <span class="material-symbols-rounded">school</span>
       </div>
-      <div class="login-app-name" id="login-app-name">PresensiGuru</div>
-      <div class="login-tagline" id="login-school-name">Sistem Presensi Digital</div>
+      <div class="login-app-name" id="login-app-name">SITABA</div>
+      <div class="login-tagline" id="login-tagline">Sistem Timeline, Absen dan Berita</div>
+      <div class="login-tagline" id="login-school-name" style="margin-top:2px;opacity:0.85;">Sistem Presensi Digital</div>
     </div>
 
     <div class="login-card">
-      <h2>Selamat Datang 👋</h2>
-      <p>Masuk dengan akun yang telah diberikan admin</p>
+      <h2>Selamat Datang </h2>
+      <p>Aplikasi Presensi Guru dan Komunikasi Sekolah · Masuk dengan akun SITABA anda.</p>
 
       <div class="form-group">
         <label class="form-label" for="input-email">Email</label>
@@ -2324,7 +2331,7 @@
       </div>
 
       <!-- Stats Grid -->
-      <div class="section-header">
+      <div class="section-header" id="section-header-rekap">
         <span class="section-title">Rekap Bulan Ini</span>
         <button class="section-link" id="btn-lihat-rekap">Lihat Semua</button>
       </div>
@@ -2784,13 +2791,16 @@
       <button class="chat-room-back" id="btn-back-chat">
         <span class="material-symbols-rounded">arrow_back</span>
       </button>
-      <div class="chat-avatar" style="width:38px;height:38px;font-size:14px;flex-shrink:0;">
+      <div class="chat-avatar" id="chat-room-avatar" style="width:38px;height:38px;font-size:14px;flex-shrink:0;">
         <span class="material-symbols-rounded" style="font-size:20px;color:#fff;">groups</span>
       </div>
       <div class="chat-room-info">
         <div class="chat-room-name" id="chat-room-name">Memuat...</div>
         <div class="chat-room-status" id="chat-room-status">Memuat pesan...</div>
       </div>
+      <button class="header-btn hidden" id="btn-hapus-obrolan" title="Hapus Obrolan" style="margin-left:auto;color:#fff;">
+        <span class="material-symbols-rounded">delete</span>
+      </button>
     </div>
 
     <div class="chat-messages-area" id="chat-messages-area">
@@ -2963,10 +2973,13 @@
 		  <span class="material-symbols-rounded">arrow_back</span>
 		</button>
 		<div class="header-title-group">
-		  <div class="header-title">Laporan</div>
+		  <div class="header-title" id="laporan-title">Laporan</div>
 		  <div class="header-subtitle" id="laporan-subtitle">Rekap kehadiran</div>
 		</div>
 		<div class="header-actions">
+		  <button class="header-btn" id="btn-cetak-pdf-laporan" title="Cetak PDF" style="display:none;">
+			<span class="material-symbols-rounded">print</span>
+		  </button>
 		  <button class="header-btn" id="btn-export-laporan" title="Export CSV">
 			<span class="material-symbols-rounded">download</span>
 		  </button>
@@ -2990,10 +3003,25 @@
 		  </button>
 		</div>
 	 
-		<!-- Tab: Rekap / Izin / Detail -->
+		<!-- Dropdown Pilih Guru (hanya muncul untuk admin/kepsek) -->
+		<div id="laporan-pilih-guru-wrap" style="display:none;padding:0 16px 8px;">
+		  <div style="position:relative;">
+			<span class="material-symbols-rounded" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--gray-500);pointer-events:none;">person_search</span>
+			<input type="text" id="laporan-guru-search-input" placeholder="Cari nama guru/pegawai... (kosong = Semua)" autocomplete="off"
+			  style="width:100%;padding:10px 12px 10px 36px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:13px;font-family:var(--font-main);background:var(--gray-50);outline:none;"
+			/>
+		  </div>
+		  <div id="laporan-guru-dropdown" style="display:none;position:absolute;z-index:100;left:16px;right:16px;background:#fff;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);box-shadow:var(--shadow-md);max-height:200px;overflow-y:auto;margin-top:4px;"></div>
+		  <div id="laporan-guru-terpilih" style="display:none;margin-top:6px;padding:6px 10px;background:var(--primary-50);border-radius:var(--radius-sm);font-size:12px;color:var(--primary-700);font-weight:600;display:flex;align-items:center;justify-content:space-between;">
+			<span id="laporan-guru-terpilih-nama"></span>
+			<button onclick="clearGuruTerpilih()" style="border:none;background:none;color:var(--primary-700);cursor:pointer;font-size:16px;line-height:1;">×</button>
+		  </div>
+		</div>
+
+		<!-- Tab: Rekap / Izin / Detail (tab Izin hanya untuk admin/kepsek) -->
 		<div style="display:flex;gap:4px;padding:0 16px 8px;">
 		  <button class="laporan-tab active" data-tab="rekap" style="flex:1;padding:8px 4px;border:none;background:var(--primary-600);color:#fff;border-radius:var(--radius-md);font-size:12px;font-weight:600;font-family:var(--font-main);cursor:pointer;">Rekap</button>
-		  <button class="laporan-tab" data-tab="izin" style="flex:1;padding:8px 4px;border:none;background:var(--gray-200);color:var(--gray-700);border-radius:var(--radius-md);font-size:12px;font-weight:600;font-family:var(--font-main);cursor:pointer;">Izin</button>
+		  <button class="laporan-tab hidden" id="laporan-tab-izin" data-tab="izin" style="flex:1;padding:8px 4px;border:none;background:var(--gray-200);color:var(--gray-700);border-radius:var(--radius-md);font-size:12px;font-weight:600;font-family:var(--font-main);cursor:pointer;">Izin</button>
 		</div>
 	 
 		<!-- Konten laporan -->
@@ -3115,6 +3143,22 @@
 			<input type="file" id="input-logo-kanan" accept="image/*" style="display:none;" />
 		  </div>
 		</div>
+
+		<!-- Logo Aplikasi (halaman login) — via link, bukan upload -->
+		<div class="section-header" style="padding:0 0 10px;">
+		  <span class="section-title">Logo Aplikasi (Halaman Login)</span>
+		</div>
+		<div style="display:flex;gap:12px;margin-bottom:14px;align-items:center;">
+		  <div id="ds-logo-app-preview" style="width:64px;height:64px;flex-shrink:0;border-radius:var(--radius-lg);background:var(--gray-100);border:1.5px dashed var(--gray-300);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+			<span class="material-symbols-rounded" style="font-size:28px;color:var(--gray-400);">image</span>
+		  </div>
+		  <div class="form-group" style="flex:1;margin-bottom:0;">
+			<label class="form-label">Link Logo (Google Drive)</label>
+			<input type="url" id="ds-logo-url" placeholder="https://drive.google.com/uc?id=..."
+			  style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:13px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+		  </div>
+		</div>
+		<div style="font-size:11px;color:var(--gray-500);margin-bottom:20px;">Tempel link gambar langsung (bukan link halaman "view"). Logo ini tampil di halaman login aplikasi.</div>
 
 		<!-- Identitas -->
 		<div class="section-header" style="padding:0 0 10px;">
@@ -3376,6 +3420,13 @@
       <span class="nav-label">Beranda</span>
     </button>
 
+    <button class="nav-item" id="nav-item-laporan" data-page="laporan">
+      <div class="nav-icon-wrap">
+        <span class="material-symbols-rounded">bar_chart</span>
+      </div>
+      <span class="nav-label">Laporan</span>
+    </button>
+
     <button class="nav-item nav-absen" id="nav-item-absen" data-page="absen">
       <div class="nav-icon-wrap">
         <span class="material-symbols-rounded">fingerprint</span>
@@ -3397,6 +3448,86 @@
       <span class="nav-label">Profil</span>
     </button>
   </nav>
+
+  <!-- ================================================================
+       MODAL: PREVIEW PDF
+  ================================================================ -->
+  <div class="modal-overlay" id="modal-preview-pdf" style="align-items:center;justify-content:center;">
+    <div style="
+      background:var(--surface-card);
+      border-radius:var(--radius-2xl);
+      width:calc(100% - 24px);
+      max-height:92dvh;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      box-shadow:var(--shadow-lg);
+      animation:slideUp 0.3s cubic-bezier(0.32,0.72,0,1);
+    ">
+      <!-- Header modal -->
+      <div style="
+        display:flex;align-items:center;justify-content:space-between;
+        padding:14px 16px 12px;
+        border-bottom:1px solid var(--gray-100);
+        flex-shrink:0;
+      ">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="
+            width:36px;height:36px;border-radius:var(--radius-md);
+            background:var(--primary-50);display:flex;align-items:center;justify-content:center;
+          ">
+            <span class="material-symbols-rounded" style="font-size:20px;color:var(--primary-700);">picture_as_pdf</span>
+          </div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:var(--gray-900);" id="pdf-preview-title">Pratinjau PDF</div>
+            <div style="font-size:11px;color:var(--gray-500);">Periksa sebelum mengunduh</div>
+          </div>
+        </div>
+        <button class="modal-close" id="close-modal-preview-pdf">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+
+      <!-- Iframe PDF viewer -->
+      <div style="flex:1;overflow:hidden;min-height:0;background:var(--gray-100);">
+        <iframe
+          id="pdf-preview-frame"
+          style="width:100%;height:60dvh;border:none;display:block;"
+          src=""
+        ></iframe>
+      </div>
+
+      <!-- Tombol aksi -->
+      <div style="
+        padding:14px 16px;
+        display:flex;gap:10px;
+        border-top:1px solid var(--gray-100);
+        flex-shrink:0;
+      ">
+        <button id="btn-pdf-unduh" style="
+          flex:1;padding:13px;
+          background:linear-gradient(135deg,var(--primary-600),var(--primary-700));
+          color:#fff;border:none;border-radius:var(--radius-md);
+          font-size:14px;font-weight:700;font-family:var(--font-main);
+          cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+          box-shadow:0 4px 12px rgba(21,101,192,0.3);
+        ">
+          <span class="material-symbols-rounded" style="font-size:18px;">download</span>
+          Unduh PDF
+        </button>
+        <button id="btn-pdf-buka-tab" style="
+          flex:1;padding:13px;
+          background:var(--gray-100);
+          color:var(--gray-800);border:none;border-radius:var(--radius-md);
+          font-size:14px;font-weight:700;font-family:var(--font-main);
+          cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+        ">
+          <span class="material-symbols-rounded" style="font-size:18px;">open_in_new</span>
+          Buka Tab
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ================================================================
        MODAL: LOGOUT KONFIRMASI
@@ -3453,6 +3584,33 @@
   </div>
 
   <!-- ================================================================
+       MODAL: KONFIRMASI (generik) — pengganti confirm() bawaan browser.
+       Dipanggil lewat fungsi JS konfirmasiDialog({...}) yang mengembalikan
+       Promise<boolean>, supaya semua dialog konfirmasi di app tampilannya
+       konsisten & profesional (bukan popup sistem yang kaku).
+  ================================================================ -->
+  <div class="modal-overlay" id="modal-konfirmasi">
+    <div class="modal-sheet" style="max-width:420px;margin:0 auto;border-radius:var(--radius-2xl);">
+      <div class="modal-handle"></div>
+      <div class="modal-body" style="padding-top:8px;">
+        <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:22px;">
+          <div id="konfirmasi-icon-wrap" style="width:46px;height:46px;border-radius:50%;background:var(--danger-50);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span class="material-symbols-rounded" id="konfirmasi-icon" style="font-size:24px;color:var(--danger-600);">warning</span>
+          </div>
+          <div style="flex:1;min-width:0;padding-top:2px;">
+            <div class="modal-title" id="konfirmasi-title" style="margin-bottom:5px;">Konfirmasi</div>
+            <p id="konfirmasi-message" style="font-size:13.5px;color:var(--gray-600);line-height:1.55;margin:0;">Apakah Anda yakin?</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn-tolak" id="btn-konfirmasi-batal" style="flex:1;" type="button">Batal</button>
+          <button class="btn-primary" id="btn-konfirmasi-ok" style="flex:1;" type="button">Ya, Lanjutkan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================
        MODAL: COMPOSE POST SOSMED
   ================================================================ -->
   <div class="modal-overlay" id="modal-compose">
@@ -3466,7 +3624,7 @@
       </div>
       <div class="modal-body">
         <div style="display:flex;gap:10px;margin-bottom:14px;align-items:flex-start;">
-          <div class="compose-avatar-small">Sy</div>
+          <div class="compose-avatar-small" id="compose-modal-avatar">Sy</div>
           <textarea id="compose-post-text" placeholder="Apa yang ingin Anda bagikan hari ini?" style="flex:1;border:none;outline:none;font-size:15px;font-family:var(--font-main);resize:none;height:100px;color:var(--gray-900);background:transparent;"></textarea>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--gray-100);">
@@ -3639,8 +3797,8 @@
 /* ============================================================
    0. KONFIGURASI SUPABASE
    ============================================================ */
-const SUPABASE_URL  = 'https://indosdzwycoavznvyzkl.supabase.co';
-const SUPABASE_ANON = 'sb_publishable_I6XQ0ta6b97XDMib_kNrvw_sFGs_BO1';
+const SUPABASE_URL  = 'https://crqelkyeyezawprlwxsr.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_FHQ57UzA2kGfRcQqg8FHEA_KE9BQhl2';
 
 // Inisialisasi client Supabase (menggunakan CDN global window.supabase)
 const { createClient } = window.supabase;
@@ -3676,12 +3834,15 @@ const APP = {
   profile       : null,   // baris dari tabel profiles
   sekolah       : null,   // baris dari tabel data_sekolah
   presensiHariIni: null,  // baris presensi hari ini
+  statusWajibAbsen: null, // { wajib: bool, alasan: string|null } — hasil cekWajibAbsenHariIni()
+  diLokasiSekolah: false, // status radius terkini, diupdate oleh updateStatusLokasiUI()
   gpsWatcher    : null,   // ID watchPosition
   koordinatSaatIni: null, // { lat, lng }
   clockInterval : null,   // setInterval jam live
   realtimeChannel: null,  // Supabase Realtime channel (chat)
   presensiChannel: null,  // Supabase Realtime channel (presensi)
   currentRoomId : null,   // room_id chat yang sedang dibuka
+  currentRoomBisaHapus: false, // apakah user ini adalah pembuat room yang sedang dibuka
   fotoMasukBase64: null,  // base64 foto selfie absen masuk (sudah dikompres jika perlu)
   fotoPulangBase64: null, // base64 foto selfie absen pulang (sudah dikompres jika perlu)
   streamCamera  : null,   // MediaStream aktif
@@ -3793,6 +3954,23 @@ const tampilkan   = el => el?.classList.remove('hidden');
 function setText(id, val) {
   const el = document.getElementById(id);
   if (el) el.textContent = val;
+}
+
+/** Terapkan logo sekolah (logo_url) ke logo halaman login
+ * DAN ke semua logo kecil di header tiap halaman (.header-logo-small).
+ * Kalau logo_url kosong/null, fallback ke ikon default "school".
+ */
+function terapkanLogoAplikasi(logoUrl) {
+  const htmlLogo = logoUrl
+    ? `<img src="${escapeHTML(logoUrl)}" alt="Logo" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;" onerror="this.parentElement.innerHTML='<span class=\\'material-symbols-rounded\\'>school</span>';" />`
+    : `<span class="material-symbols-rounded">school</span>`;
+
+  const logoLogin = document.getElementById('login-logo');
+  if (logoLogin) logoLogin.innerHTML = htmlLogo;
+
+  document.querySelectorAll('.header-logo-small').forEach(el => {
+    el.innerHTML = htmlLogo;
+  });
 }
 
 /* ============================================================
@@ -3985,10 +4163,14 @@ async function mulaiAplikasi() {
     const { data: sekolahData } = await sb.from('data_sekolah').select('*').eq('id', 1).single();
     if (sekolahData) {
       APP.sekolah = sekolahData;
-      const namaSekolah = sekolahData.nama_sekolah || 'PresensiGuru';
+      const namaSekolah = sekolahData.nama_sekolah || 'Sistem Presensi Digital';
       setText('login-school-name', namaSekolah);
       setText('header-school-name', namaSekolah);
-      setText('login-app-name', 'PresensiGuru');
+      setText('login-app-name', 'SITABA');
+
+      // Logo aplikasi (login + semua header halaman) — pakai link Drive dari
+      // Data Sekolah kalau sudah diisi admin, fallback ke ikon default kalau belum.
+      terapkanLogoAplikasi(sekolahData.logo_url);
     }
   } catch (e) {
     console.warn('Gagal memuat data sekolah:', e.message);
@@ -4171,13 +4353,14 @@ function updateStatusLokasiUI() {
   const batasRadius = Number(APP.sekolah.radius_meter) || 50;
   const diLokasi = jarak <= batasRadius;
   const jarakTeks = jarak < 1000 ? `${Math.round(jarak)} meter` : `${(jarak / 1000).toFixed(1)} km`;
+  APP.diLokasiSekolah = diLokasi;
 
   // Update UI absen masuk
   const labelMasukEl = document.getElementById('lokasi-masuk-label');
   const subMasukEl   = document.getElementById('lokasi-masuk-sub');
   const chipMasukEl   = document.getElementById('chip-lokasi-masuk');
   if (labelMasukEl) labelMasukEl.textContent = diLokasi ? 'Di Lokasi Sekolah' : 'Di Luar Lokasi Sekolah';
-  if (subMasukEl)   subMasukEl.textContent   = `Jarak ±${jarakTeks} dari sekolah`;
+  if (subMasukEl)   subMasukEl.textContent   = `Jarak ±${jarakTeks} dari sekolah (radius ${batasRadius}m)`;
   if (chipMasukEl) {
     chipMasukEl.textContent = diLokasi ? 'Di Lokasi' : 'Luar Radius';
     chipMasukEl.className = 'lokasi-status-chip ' + (diLokasi ? 'di-lokasi' : 'luar');
@@ -4188,11 +4371,69 @@ function updateStatusLokasiUI() {
   const subEl   = document.getElementById('lokasi-pulang-sub');
   const chipEl  = document.getElementById('chip-lokasi-pulang');
   if (labelEl) labelEl.textContent = diLokasi ? 'Di Lokasi Sekolah' : 'Di Luar Lokasi Sekolah';
-  if (subEl)   subEl.textContent   = `Jarak ±${jarakTeks} dari sekolah`;
+  if (subEl)   subEl.textContent   = `Jarak ±${jarakTeks} dari sekolah (radius ${batasRadius}m)`;
   if (chipEl) {
     chipEl.textContent = diLokasi ? 'Di Lokasi' : 'Luar Radius';
     chipEl.className = 'lokasi-status-chip ' + (diLokasi ? 'di-lokasi' : 'luar');
   }
+
+  // Kunci/buka tombol "Buka Kamera" berdasarkan radius — hanya berlaku
+  // untuk kartu yang BELUM diambil fotonya (kalau kamera sudah terbuka
+  // / foto sudah diambil, tombolnya sudah berubah jadi tombol submit,
+  // jadi tidak kita sentuh di sini).
+  const btnKameraMasuk  = document.getElementById('btn-buka-kamera-masuk');
+  if (btnKameraMasuk) {
+    btnKameraMasuk.disabled = !diLokasi;
+    btnKameraMasuk.innerHTML = diLokasi
+      ? `<span class="material-symbols-rounded">photo_camera</span> Buka Kamera`
+      : `<span class="material-symbols-rounded">block</span> Di Luar Radius Sekolah`;
+  }
+  const btnKameraPulang = document.getElementById('btn-buka-kamera-pulang');
+  if (btnKameraPulang) {
+    btnKameraPulang.disabled = !diLokasi;
+    btnKameraPulang.innerHTML = diLokasi
+      ? `<span class="material-symbols-rounded">photo_camera</span> Buka Kamera`
+      : `<span class="material-symbols-rounded">block</span> Di Luar Radius Sekolah`;
+  }
+}
+
+/**
+ * Dipanggil saat tombol "Refresh Lokasi" ditekan manual oleh user.
+ * Berguna saat sinyal GPS lambat / akurasi awal kurang baik, supaya
+ * tidak perlu tunggu watcher otomatis (yang punya maximumAge 10 detik).
+ */
+function refreshLokasiSekarang() {
+  if (!navigator.geolocation) {
+    toast('Perangkat tidak mendukung GPS', 'warning');
+    return;
+  }
+
+  ['btn-refresh-radius-masuk', 'btn-refresh-radius-pulang'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.innerHTML = `<span class="material-symbols-rounded" style="font-size:16px;animation:spin 1s linear infinite;">progress_activity</span> Memperbarui...`;
+  });
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      APP.koordinatSaatIni = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      updateStatusLokasiUI();
+      toast('📍 Lokasi diperbarui', 'success');
+      resetTombolRefreshRadius();
+    },
+    err => {
+      const pesan = err.code === 1 ? 'Izin lokasi ditolak' : 'Gagal memperbarui lokasi';
+      toast(pesan, 'error');
+      resetTombolRefreshRadius();
+    },
+    { enableHighAccuracy: true, timeout: 15000 }
+  );
+}
+
+function resetTombolRefreshRadius() {
+  ['btn-refresh-radius-masuk', 'btn-refresh-radius-pulang'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.innerHTML = `<span class="material-symbols-rounded" style="font-size:16px;">refresh</span> Refresh Lokasi`;
+  });
 }
 
 /* ============================================================
@@ -4216,6 +4457,10 @@ async function renderBeranda() {
   const composeAvatarEl = document.getElementById('compose-avatar');
   if (composeAvatarEl) composeAvatarEl.outerHTML = `<div id="compose-avatar" style="flex-shrink:0;">${htmlAvatar(p.nama, p.foto_profil_id, 38)}</div>`;
 
+  // Avatar di modal "Buat Postingan"
+  const composeModalAvatarEl = document.getElementById('compose-modal-avatar');
+  if (composeModalAvatarEl) composeModalAvatarEl.outerHTML = `<div id="compose-modal-avatar" style="flex-shrink:0;">${htmlAvatar(p.nama, p.foto_profil_id, 40)}</div>`;
+
   // Avatar hero beranda
   const heroAvatarEl = document.getElementById('hero-avatar');
   if (heroAvatarEl) heroAvatarEl.innerHTML = htmlAvatar(p.nama, p.foto_profil_id, 48);
@@ -4235,7 +4480,6 @@ async function renderBeranda() {
   const isAdmin = ['admin', 'kepsek'].includes(p.role);
   if (isAdmin) {
     ['qm-kelola-izin', 'qm-pengaturan'].forEach(id => tampilkan(document.getElementById(id)));
-    // qm-laporan & qm-kelola-guru masih dalam pengembangan, tampil tapi memberi toast info
     ['qm-laporan', 'qm-kelola-guru'].forEach(id => tampilkan(document.getElementById(id)));
     tampilkan(document.getElementById('tab-admin-izin'));
     tampilkan(document.getElementById('menu-data-sekolah'));
@@ -4245,7 +4489,9 @@ async function renderBeranda() {
     tampilkan(document.getElementById('btn-tambah-jadwal'));
   }
 
-  // Khusus role 'admin' murni (bukan kepsek) — sembunyikan menu/nav Absen
+  // Navbar per-role:
+  // - Admin murni  : Beranda, Laporan, Izin, Profil (TANPA Absen — admin tidak presensi)
+  // - Kepsek/Guru/Pegawai : Beranda, Laporan, Absen, Izin, Profil
   const navAbsen = document.getElementById('nav-item-absen');
   if (p.role === 'admin') {
     navAbsen?.classList.add('nav-hidden');
@@ -4253,8 +4499,24 @@ async function renderBeranda() {
     navAbsen?.classList.remove('nav-hidden');
   }
 
-  // Muat rekap bulan ini
-  await muatRekapBulanIni();
+  // Kartu "Status Hari Ini" & "Rekap Bulan Ini" di beranda hanya relevan
+  // untuk role yang presensi. Admin tidak absen, jadi disembunyikan
+  // total agar tidak menampilkan data statis/membingungkan.
+  const heroStatusCard   = document.querySelector('.hero-status-card');
+  if (p.role === 'admin') {
+    sembunyikan(heroStatusCard);
+    document.querySelectorAll('.stats-grid').forEach(sembunyikan);
+    sembunyikan(document.getElementById('section-header-rekap'));
+  } else {
+    tampilkan(heroStatusCard);
+    document.querySelectorAll('.stats-grid').forEach(tampilkan);
+    tampilkan(document.getElementById('section-header-rekap'));
+  }
+
+  // Muat rekap bulan ini (skip untuk admin, tidak relevan)
+  if (p.role !== 'admin') {
+    await muatRekapBulanIni();
+  }
 
   // Muat presensi hari ini (skip untuk admin murni, tidak relevan)
   if (p.role !== 'admin') {
@@ -4307,6 +4569,55 @@ async function muatRekapBulanIni() {
 /* ============================================================
    11. PRESENSI HARI INI
    ============================================================ */
+
+/**
+ * Menentukan apakah user WAJIB absen hari ini.
+ * - tipe_kehadiran 'global' → selalu wajib (asal hari ini hari kerja aktif sekolah)
+ * - tipe_kehadiran 'jadwal' → wajib HANYA jika ada baris jadwal_mengajar
+ *   untuk hari ini. Guru/Kepsek tetap BOLEH absen sukarela di hari tanpa
+ *   jadwal — ini hanya menentukan label & status, bukan mengunci tombol.
+ * Admin selalu dianggap tidak wajib (tidak presensi sama sekali).
+ */
+async function cekWajibAbsenHariIni() {
+  const role = APP.profile?.role;
+  if (role === 'admin') {
+    return { wajib: false, alasan: 'Admin tidak memerlukan absensi' };
+  }
+
+  const hariIniRaw = new Date().toLocaleDateString('id-ID', { timeZone: 'Asia/Makassar', weekday: 'long' });
+  const hariIni = hariIniRaw.charAt(0).toUpperCase() + hariIniRaw.slice(1);
+
+  // Cek apakah hari ini termasuk hari kerja aktif sekolah (konfigurasi_hari)
+  const { data: konfHari } = await sb
+    .from('konfigurasi_hari')
+    .select('is_hari_kerja')
+    .eq('nama_hari', hariIni)
+    .maybeSingle();
+
+  if (konfHari && konfHari.is_hari_kerja === false) {
+    return { wajib: false, alasan: `Hari ini (${hariIni}) bukan hari kerja sekolah` };
+  }
+
+  const tipeKehadiran = APP.profile?.tipe_kehadiran || 'global';
+
+  if (tipeKehadiran === 'global') {
+    return { wajib: true, alasan: null };
+  }
+
+  // tipe_kehadiran === 'jadwal' → cek jadwal_mengajar hari ini
+  const { data: jadwalHariIni } = await sb
+    .from('jadwal_mengajar')
+    .select('id, jam_mulai, jam_selesai')
+    .eq('guru_id', APP.user.id)
+    .eq('hari', hariIni)
+    .maybeSingle();
+
+  if (jadwalHariIni) {
+    return { wajib: true, alasan: null, jadwal: jadwalHariIni };
+  }
+  return { wajib: false, alasan: `Tidak ada jadwal mengajar hari ${hariIni}` };
+}
+
 async function muatPresensiHariIni() {
   const hari = new Date().toLocaleDateString('id-ID', { timeZone: 'Asia/Makassar' })
     .split('/').reverse().join('-'); // dd/mm/yyyy -> yyyy-mm-dd
@@ -4319,6 +4630,16 @@ async function muatPresensiHariIni() {
     .maybeSingle();
 
   APP.presensiHariIni = data || null;
+  APP.statusWajibAbsen = await cekWajibAbsenHariIni();
+
+  // Header halaman absen: info wajib/tidak wajib
+  const subHeaderEl = document.getElementById('absen-header-sub');
+  if (subHeaderEl) {
+    subHeaderEl.textContent = APP.statusWajibAbsen.wajib
+      ? 'Wajib hadir hari ini'
+      : `Tidak wajib absen — ${APP.statusWajibAbsen.alasan}`;
+  }
+
   renderStatusAbsen(data);
 }
 
@@ -4336,12 +4657,15 @@ function renderStatusAbsen(absen) {
 
   if (!absen) {
     // Belum absen sama sekali
-    if (statusEl) statusEl.textContent = 'Belum Absen';
-    if (waktuEl)  waktuEl.textContent  = 'Anda belum melakukan absen hari ini';
+    const tidakWajib = APP.statusWajibAbsen && !APP.statusWajibAbsen.wajib;
+    if (statusEl) statusEl.textContent = tidakWajib ? 'Tidak Wajib Absen' : 'Belum Absen';
+    if (waktuEl)  waktuEl.textContent  = tidakWajib
+      ? (APP.statusWajibAbsen.alasan || 'Hari ini tidak wajib hadir')
+      : 'Anda belum melakukan absen hari ini';
     if (badgeEl)  badgeEl.textContent  = '-';
 
     // Status absen page
-    updateStatusPillsAbsen('belum');
+    updateStatusPillsAbsen(tidakWajib ? 'tidak-wajib' : 'belum');
     renderTombolAbsen(null);
     return;
   }
@@ -4378,6 +4702,10 @@ function updateStatusPillsAbsen(status) {
     'belum': `
       <div class="status-pill belum">
         <span class="material-symbols-rounded">radio_button_unchecked</span> Belum Absen Masuk
+      </div>`,
+    'tidak-wajib': `
+      <div class="status-pill" style="background:var(--gray-100);color:var(--gray-600);">
+        <span class="material-symbols-rounded">event_busy</span> Tidak Wajib Absen Hari Ini
       </div>`,
     'sudah-masuk': `
       <div class="status-pill hadir">
@@ -4431,15 +4759,18 @@ function renderTombolAbsen(absen) {
           </div>
           <div class="lokasi-status-chip di-lokasi" id="chip-lokasi-masuk">Mencari...</div>
         </div>
+        <button class="btn-refresh-radius" id="btn-refresh-radius-masuk" type="button" style="width:100%;margin-bottom:10px;padding:8px;border:1.5px dashed var(--gray-300);background:none;border-radius:var(--radius-md);font-size:12px;font-weight:600;color:var(--gray-600);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <span class="material-symbols-rounded" style="font-size:16px;">refresh</span> Refresh Lokasi
+        </button>
         <div class="foto-capture-area" id="foto-masuk-area">
           <div class="foto-capture-placeholder">
             <span class="material-symbols-rounded">photo_camera</span>
             <p>Ambil foto selfie untuk absen masuk</p>
           </div>
         </div>
-        <button class="btn-buka-kamera" id="btn-buka-kamera-masuk" type="button">
-          <span class="material-symbols-rounded">photo_camera</span>
-          Buka Kamera
+        <button class="btn-buka-kamera" id="btn-buka-kamera-masuk" type="button" disabled>
+          <span class="material-symbols-rounded">location_searching</span>
+          Menunggu Lokasi GPS...
         </button>
         <button class="btn-absen-masuk" id="btn-absen-masuk" type="button" disabled>
           <span class="material-symbols-rounded">login</span>
@@ -4448,6 +4779,10 @@ function renderTombolAbsen(absen) {
 
       document.getElementById('btn-buka-kamera-masuk')?.addEventListener('click', () => bukaKamera('masuk'));
       document.getElementById('btn-absen-masuk')?.addEventListener('click', lakukanAbsenMasuk);
+      document.getElementById('btn-refresh-radius-masuk')?.addEventListener('click', refreshLokasiSekarang);
+
+      // Langsung evaluasi status radius terkini (kalau GPS sudah ada sebelumnya)
+      updateStatusLokasiUI();
     }
     if (badgeMasuk) { badgeMasuk.className = 'absen-card-type-badge pending'; badgeMasuk.textContent = 'Belum'; }
 
@@ -4514,15 +4849,18 @@ function renderTombolAbsen(absen) {
             </div>
             <div class="lokasi-status-chip di-lokasi" id="chip-lokasi-pulang">Mencari...</div>
           </div>
+          <button class="btn-refresh-radius" id="btn-refresh-radius-pulang" type="button" style="width:100%;margin-bottom:10px;padding:8px;border:1.5px dashed var(--gray-300);background:none;border-radius:var(--radius-md);font-size:12px;font-weight:600;color:var(--gray-600);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+            <span class="material-symbols-rounded" style="font-size:16px;">refresh</span> Refresh Lokasi
+          </button>
           <div class="foto-capture-area" id="foto-pulang-area">
             <div class="foto-capture-placeholder">
               <span class="material-symbols-rounded">photo_camera</span>
               <p>Ambil foto selfie untuk absen pulang</p>
             </div>
           </div>
-          <button class="btn-buka-kamera" id="btn-buka-kamera-pulang" type="button">
-            <span class="material-symbols-rounded">photo_camera</span>
-            Buka Kamera
+          <button class="btn-buka-kamera" id="btn-buka-kamera-pulang" type="button" disabled>
+            <span class="material-symbols-rounded">location_searching</span>
+            Menunggu Lokasi GPS...
           </button>
           <button class="btn-absen-pulang" id="btn-absen-pulang" type="button" disabled>
             <span class="material-symbols-rounded">logout</span>
@@ -4531,6 +4869,10 @@ function renderTombolAbsen(absen) {
         `;
         document.getElementById('btn-buka-kamera-pulang')?.addEventListener('click', () => bukaKamera('pulang'));
         document.getElementById('btn-absen-pulang')?.addEventListener('click', lakukanAbsenPulang);
+        document.getElementById('btn-refresh-radius-pulang')?.addEventListener('click', refreshLokasiSekarang);
+
+        // Langsung evaluasi status radius terkini
+        updateStatusLokasiUI();
       }
       if (badgePulang) { badgePulang.className = 'absen-card-type-badge pending'; badgePulang.textContent = 'Belum'; }
     }
@@ -4557,6 +4899,13 @@ function hentikanKamera() {
  * akan memblokir permintaan izin kamera tanpa gesture yang sah.
  */
 async function bukaKamera(tipe) {
+  // Pertahanan tambahan: tombol seharusnya sudah disabled kalau di luar
+  // radius, tapi kita cek ulang di sini untuk jaga-jaga.
+  if (!APP.diLokasiSekolah) {
+    toast('❌ Anda di luar radius sekolah. Kamera tidak dapat dibuka.', 'error', 5000);
+    return;
+  }
+
   const area = document.getElementById(`foto-${tipe}-area`);
   const btnBuka = document.getElementById(`btn-buka-kamera-${tipe}`);
 
@@ -4704,6 +5053,14 @@ async function lakukanAbsenMasuk() {
     toast('Menunggu sinyal GPS, mohon tunggu sebentar...', 'warning');
     return;
   }
+  // Pertahanan terakhir: tombol "Buka Kamera" memang sudah dikunci kalau
+  // di luar radius, tapi kita validasi ulang di sini supaya tidak bisa
+  // diakali lewat manipulasi DOM (mis. devtools mengaktifkan tombol).
+  if (!APP.diLokasiSekolah) {
+    toast('❌ Anda di luar radius sekolah, absen tidak dapat disimpan', 'error', 5000);
+    updateStatusLokasiUI();
+    return;
+  }
 
   const { lat, lng } = APP.koordinatSaatIni;
 
@@ -4781,6 +5138,11 @@ async function lakukanAbsenPulang() {
   if (!APP.fotoPulangBase64) { toast('Ambil foto selfie terlebih dahulu', 'warning'); return; }
   if (!APP.presensiHariIni?.waktu_masuk) { toast('Belum melakukan absen masuk', 'warning'); return; }
   if (!APP.koordinatSaatIni) { toast('Menunggu sinyal GPS, mohon tunggu sebentar...', 'warning'); return; }
+  if (!APP.diLokasiSekolah) {
+    toast('❌ Anda di luar radius sekolah, absen tidak dapat disimpan', 'error', 5000);
+    updateStatusLokasiUI();
+    return;
+  }
 
   const { lat, lng } = APP.koordinatSaatIni;
 
@@ -5024,7 +5386,13 @@ async function muatRiwayatIzin() {
 }
 
 async function hapusRiwayatIzin(id, btn) {
-  if (!confirm('Hapus riwayat permohonan ini? Tindakan ini tidak dapat dibatalkan.')) return;
+  const ok = await konfirmasiDialog({
+    judul:  'Hapus Riwayat?',
+    pesan:  'Riwayat permohonan ini akan dihapus. Tindakan ini tidak dapat dibatalkan.',
+    teksOk: 'Ya, Hapus',
+    ikon:   'delete'
+  });
+  if (!ok) return;
 
   if (btn) btn.disabled = true;
 
@@ -5050,7 +5418,7 @@ async function muatKelolaIzin() {
 
   const { data, error } = await sb
     .from('pengajuan_izin')
-    .select('*, profiles!pengajuan_izin_guru_id_fkey(nama, mapel), pemutus:profiles!pengajuan_izin_disetujui_oleh_fkey(nama)')
+    .select('*, profiles!pengajuan_izin_guru_id_fkey(nama, mapel, foto_profil_id), pemutus:profiles!pengajuan_izin_disetujui_oleh_fkey(nama)')
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -5098,7 +5466,7 @@ function renderKelolaIzinList() {
   const html = data.map(item => {
     const nama  = item.profiles?.nama || 'Nama Guru';
     const mapel = item.profiles?.mapel || '-';
-    const inisialGuru = inisial(nama);
+    const avatarGuru = htmlAvatar(nama, item.profiles?.foto_profil_id || null, 40, 'kelola-guru-avatar');
     const durasi = Math.round((new Date(item.tanggal_selesai) - new Date(item.tanggal_mulai)) / 86400000) + 1;
     const tglStr = `${new Date(item.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}${item.tanggal_mulai !== item.tanggal_selesai ? ` – ${new Date(item.tanggal_selesai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}` : ''}`;
     const lampiranHtml = item.drive_lampiran_id
@@ -5131,7 +5499,7 @@ function renderKelolaIzinList() {
     return `
       <div class="kelola-izin-card" data-izin-id="${item.id}">
         <div class="kelola-izin-card-header">
-          <div class="kelola-guru-avatar">${inisialGuru}</div>
+          <div class="kelola-guru-avatar">${avatarGuru}</div>
           <div style="flex:1;">
             <div class="kelola-izin-guru-name">${escapeHTML(nama)}</div>
             <div class="kelola-izin-guru-mapel">${escapeHTML(mapel)}</div>
@@ -5232,7 +5600,13 @@ async function konfirmasiTolakIzin() {
 }
 
 async function hapusKelolaIzin(id) {
-  if (!confirm('Hapus riwayat permohonan ini secara permanen?')) return;
+  const ok = await konfirmasiDialog({
+    judul:  'Hapus Riwayat?',
+    pesan:  'Riwayat permohonan ini akan dihapus secara permanen.',
+    teksOk: 'Ya, Hapus',
+    ikon:   'delete'
+  });
+  if (!ok) return;
 
   const { error } = await sb.from('pengajuan_izin').delete().eq('id', id);
 
@@ -6039,7 +6413,7 @@ async function muatChatList() {
   // Ambil semua room di mana user ini adalah participant
   const { data: participantData } = await sb
     .from('chat_participants')
-    .select('room_id, chat_rooms(id, nama_grup, is_group)')
+    .select('room_id, chat_rooms(id, nama_grup, is_group, dibuat_oleh)')
     .eq('guru_id', APP.user.id);
 
   const subtitle = document.getElementById('chat-subtitle');
@@ -6056,21 +6430,25 @@ async function muatChatList() {
 
   const roomIds = participantData.map(p => p.room_id);
 
-  // Untuk room personal (bukan grup), nama yang ditampilkan adalah nama LAWAN bicara,
-  // jadi perlu ambil siapa saja anggota lain di setiap room personal.
+  // Untuk room personal (bukan grup), nama & FOTO yang ditampilkan adalah
+  // milik LAWAN bicara, jadi perlu ambil siapa saja anggota lain di
+  // setiap room personal beserta foto profilnya.
   const roomPersonalIds = participantData
     .filter(p => p.chat_rooms && p.chat_rooms.is_group === false)
     .map(p => p.room_id);
 
-  const namaLawanMap = {}; // room_id -> nama lawan
+  const lawanMap = {}; // room_id -> { nama, fotoId }
   if (roomPersonalIds.length) {
     const { data: anggotaLain } = await sb
       .from('chat_participants')
-      .select('room_id, guru_id, profiles!guru_id(nama)')
+      .select('room_id, guru_id, profiles!guru_id(nama, foto_profil_id)')
       .in('room_id', roomPersonalIds)
       .neq('guru_id', APP.user.id);
     (anggotaLain || []).forEach(a => {
-      namaLawanMap[a.room_id] = a.profiles?.nama || 'Pengguna';
+      lawanMap[a.room_id] = {
+        nama: a.profiles?.nama || 'Pengguna',
+        fotoId: a.profiles?.foto_profil_id || null,
+      };
     });
   }
 
@@ -6092,16 +6470,18 @@ async function muatChatList() {
     const room    = p.chat_rooms;
     if (!room) return '';
     const lastMsg = lastMsgMap[room.id];
-    const nama    = room.is_group ? (room.nama_grup || 'Grup') : (namaLawanMap[room.id] || 'Pengguna');
+    const lawan   = lawanMap[room.id];
+    const nama    = room.is_group ? (room.nama_grup || 'Grup') : (lawan?.nama || 'Pengguna');
     const preview = lastMsg ? `${(lastMsg.profiles?.nama?.split(' ')[0]) || 'Seseorang'}: ${lastMsg.pesan}` : 'Belum ada pesan';
     const waktu   = lastMsg ? formatTimeAgo(new Date(lastMsg.created_at)) : '';
+    const punyaku = room.dibuat_oleh === APP.user.id;
 
     return `
-      <div class="chat-list-item" data-room-id="${room.id}" data-room-name="${escapeHTML(nama)}">
+      <div class="chat-list-item" data-room-id="${room.id}" data-room-name="${escapeHTML(nama)}" data-bisa-hapus="${punyaku}" data-is-group="${room.is_group}" data-foto-id="${escapeHTML(lawan?.fotoId || '')}">
         <div class="chat-avatar ${room.is_group ? 'group' : ''}">
          ${room.is_group
           ? '<span class="material-symbols-rounded" style="font-size:22px;color:#fff;">groups</span>'
-          : htmlAvatar(nama, null, 48)}
+          : htmlAvatar(nama, lawan?.fotoId, 48)}
         </div>
         <div class="chat-item-body">
           <div class="chat-item-name">${escapeHTML(nama)}</div>
@@ -6114,17 +6494,71 @@ async function muatChatList() {
   }).join('');
 
   list.querySelectorAll('.chat-list-item').forEach(item => {
-    item.addEventListener('click', () => bukaRoomChat(item.dataset.roomId, item.dataset.roomName));
+    item.addEventListener('click', () => bukaRoomChat(
+      item.dataset.roomId,
+      item.dataset.roomName,
+      item.dataset.bisaHapus === 'true',
+      item.dataset.isGroup === 'true',
+      item.dataset.fotoId || null
+    ));
   });
 }
 
-async function bukaRoomChat(roomId, roomName) {
+async function bukaRoomChat(roomId, roomName, bisaHapus = false, isGroup = false, fotoId = null) {
   APP.currentRoomId = roomId;
+  APP.currentRoomBisaHapus = bisaHapus;
   setText('chat-room-name', roomName);
   setText('chat-room-status', 'Memuat pesan...');
+
+  const btnHapus = document.getElementById('btn-hapus-obrolan');
+  if (btnHapus) btnHapus.classList.toggle('hidden', !bisaHapus);
+
+  const avatarEl = document.getElementById('chat-room-avatar');
+  if (avatarEl) {
+    avatarEl.innerHTML = isGroup
+      ? '<span class="material-symbols-rounded" style="font-size:20px;color:#fff;">groups</span>'
+      : htmlAvatar(roomName, fotoId, 38);
+  }
+
   tampilHalaman('chat-room');
   await muatPesanChat(roomId);
   initRealtimeChat(roomId);
+}
+
+/**
+ * Hapus obrolan secara permanen. Hanya tombol yang sudah dikondisikan
+ * tampil untuk pembuat room yang bisa memicu ini (RLS di backend juga
+ * memvalidasi ulang `dibuat_oleh = auth.uid()`, jadi aman dari manipulasi
+ * DOM sekalipun). chat_messages & chat_participants ikut terhapus
+ * otomatis karena keduanya pakai ON DELETE CASCADE ke chat_rooms.
+ */
+async function hapusObrolan() {
+  if (!APP.currentRoomId || !APP.currentRoomBisaHapus) return;
+
+  const ok = await konfirmasiDialog({
+    judul:  'Hapus Obrolan?',
+    pesan:  'Semua pesan akan terhapus untuk semua anggota dan tidak dapat dikembalikan.',
+    teksOk: 'Ya, Hapus',
+    ikon:   'delete'
+  });
+  if (!ok) return;
+
+  const btn = document.getElementById('btn-hapus-obrolan');
+  if (btn) btn.disabled = true;
+
+  const { error } = await sb.from('chat_rooms').delete().eq('id', APP.currentRoomId);
+
+  if (error) {
+    toast('Gagal menghapus obrolan: ' + error.message, 'error');
+    if (btn) btn.disabled = false;
+    return;
+  }
+
+  toast('✅ Obrolan berhasil dihapus', 'success');
+  APP.currentRoomId = null;
+  APP.currentRoomBisaHapus = false;
+  tampilHalaman('chat');
+  await muatChatList();
 }
 
 async function muatPesanChat(roomId) {
@@ -6384,7 +6818,7 @@ async function mulaiObrolanBaru() {
       } else {
         const { data: roomBaru, error: errRoom } = await sb
           .from('chat_rooms')
-          .insert({ nama_grup: null, is_group: false })
+          .insert({ nama_grup: null, is_group: false, dibuat_oleh: APP.user.id })
           .select('id')
           .single();
         if (errRoom) throw errRoom;
@@ -6403,7 +6837,7 @@ async function mulaiObrolanBaru() {
 
       const { data: roomBaru, error: errRoom } = await sb
         .from('chat_rooms')
-        .insert({ nama_grup: namaGrup, is_group: true })
+        .insert({ nama_grup: namaGrup, is_group: true, dibuat_oleh: APP.user.id })
         .select('id')
         .single();
       if (errRoom) throw errRoom;
@@ -6414,8 +6848,18 @@ async function mulaiObrolanBaru() {
       if (errPeserta) throw errPeserta;
     }
 
+    // roomExisting (room personal lama) belum tentu milik kita -> cek lagi
+    // dari hasil query awal supaya status hapus akurat. Room yang baru
+    // dibuat di percabangan atas SELALU milik kita (dibuat_oleh = diri sendiri).
+    const bisaHapusRoomIni = !roomExisting; // baru dibuat oleh kita -> true; existing -> dicek ulang di bawah
+    let bisaHapusFinal = bisaHapusRoomIni;
+    if (roomExisting) {
+      const { data: roomCek } = await sb.from('chat_rooms').select('dibuat_oleh').eq('id', roomId).maybeSingle();
+      bisaHapusFinal = roomCek?.dibuat_oleh === APP.user.id;
+    }
+
     tutupModal('modal-obrolan-baru');
-    await bukaRoomChat(roomId, roomName);
+    await bukaRoomChat(roomId, roomName, bisaHapusFinal, _obModeSaatIni !== 'personal', null);
   } catch (e) {
     toast('Gagal membuat obrolan: ' + e.message, 'error');
   } finally {
@@ -6456,7 +6900,70 @@ function tutupModal(id) {
   document.getElementById(id)?.classList.remove('open');
 }
 
+/** Dialog konfirmasi kustom — pengganti confirm() bawaan browser.
+ * Tampilannya konsisten dengan desain app (bottom sheet + ikon + tombol),
+ * jadi terasa lebih profesional dibanding popup sistem yang kaku.
+ *
+ * Pemakaian:
+ *   const ok = await konfirmasiDialog({
+ *     judul:   'Hapus Riwayat?',
+ *     pesan:   'Tindakan ini tidak dapat dibatalkan.',
+ *     teksOk:  'Ya, Hapus',
+ *     bahaya:  true,      // true = merah (aksi destruktif), false = biru (aksi normal)
+ *     ikon:    'delete'   // nama ikon Material Symbols (opsional)
+ *   });
+ *   if (!ok) return;
+ *
+ * @returns {Promise<boolean>} true kalau user menekan tombol konfirmasi, false kalau batal
+ */
+function konfirmasiDialog({ judul = 'Konfirmasi', pesan = 'Apakah Anda yakin?', teksOk = 'Ya, Lanjutkan', bahaya = true, ikon = null } = {}) {
+  return new Promise(resolve => {
+    const overlay  = document.getElementById('modal-konfirmasi');
+    const iconWrap = document.getElementById('konfirmasi-icon-wrap');
+    const iconEl   = document.getElementById('konfirmasi-icon');
+    const btnOk    = document.getElementById('btn-konfirmasi-ok');
+    const btnBatal = document.getElementById('btn-konfirmasi-batal');
+    if (!overlay || !btnOk || !btnBatal) { resolve(window.confirm(pesan)); return; }
+
+    setText('konfirmasi-title', judul);
+    setText('konfirmasi-message', pesan);
+    btnOk.textContent = teksOk;
+    iconEl.textContent = ikon || (bahaya ? 'warning' : 'help');
+
+    if (bahaya) {
+      iconWrap.style.background = 'var(--danger-50)';
+      iconEl.style.color        = 'var(--danger-600)';
+      btnOk.style.background    = 'var(--danger-600)';
+    } else {
+      iconWrap.style.background = 'var(--primary-50)';
+      iconEl.style.color        = 'var(--primary-600)';
+      btnOk.style.background    = '';
+    }
+
+    const selesai = (hasil) => {
+      tutupModal('modal-konfirmasi');
+      btnOk.removeEventListener('click', onOk);
+      btnBatal.removeEventListener('click', onBatal);
+      resolve(hasil);
+    };
+    const onOk    = () => selesai(true);
+    const onBatal = () => selesai(false);
+
+    btnOk.addEventListener('click', onOk);
+    btnBatal.addEventListener('click', onBatal);
+    bukaModal('modal-konfirmasi');
+  });
+}
+
 function initModals() {
+  // ── Modal Preview PDF ──────────────────────────────────────────────────
+  document.getElementById('close-modal-preview-pdf')?.addEventListener('click', () => {
+    tutupModal('modal-preview-pdf');
+    // Jangan revoke blob agar tombol unduh/buka tab masih bisa dipakai setelah tutup
+  });
+  document.getElementById('btn-pdf-unduh')?.addEventListener('click', unduhPDFDariPreview);
+  document.getElementById('btn-pdf-buka-tab')?.addEventListener('click', bukaTabPDF);
+
   // Modal logout
   document.getElementById('menu-logout')?.addEventListener('click', () => bukaModal('modal-logout'));
   document.getElementById('close-modal-logout')?.addEventListener('click', () => tutupModal('modal-logout'));
@@ -6570,6 +7077,9 @@ function initNavigasi() {
       if (page === 'izin') {
         initTabIzin();
       }
+      if (page === 'laporan') {
+        await muatLaporan();
+      }
     });
   });
 
@@ -6578,7 +7088,7 @@ function initNavigasi() {
 
   document.getElementById('menu-data-sekolah')?.addEventListener('click', () => {
     tampilHalaman('data-sekolah');
-    muatDataSekolah();
+    muatFormDataSekolah();
   });
 
   document.getElementById('menu-hari-kerja')?.addEventListener('click', () => {
@@ -6628,6 +7138,7 @@ function initNavigasi() {
   document.getElementById('btn-back-pengumuman')?.addEventListener('click', () => tampilHalaman('beranda'));
   document.getElementById('btn-back-chat')?.addEventListener('click',       () => { tampilHalaman('chat'); muatChatList(); });
   document.getElementById('btn-back-chat-list')?.addEventListener('click', () => tampilHalaman('beranda'));
+  document.getElementById('btn-hapus-obrolan')?.addEventListener('click', hapusObrolan);
 
   // Chat send
   document.getElementById('btn-send-chat')?.addEventListener('click', kirimPesanChat);
@@ -6671,12 +7182,45 @@ function initAuthListener() {
 /* ============================================================
    LAPORAN
 ============================================================ */
-let _laporanData = { rekap: [], izin: [] };
+let _laporanData = { rekap: [], izin: [], detailPribadi: [] };
 let _laporanTab  = 'rekap';
+let _laporanModeAdmin = true; // true = lihat semua guru (admin/kepsek), false = lihat diri sendiri
+let _laporanGuruTerpilih = null; // { id, nama, nip, pangkat, mapel, role, tipe_kehadiran } atau null = Semua
+let _laporanGuruList = []; // cache daftar semua guru untuk dropdown
  
 async function muatLaporan() {
   const bulanEl = document.getElementById('laporan-bulan');
   const tahunEl = document.getElementById('laporan-tahun');
+
+  _laporanModeAdmin = ['admin', 'kepsek'].includes(APP.profile?.role);
+
+  setText('laporan-title', _laporanModeAdmin ? 'Laporan' : 'Laporan Saya');
+  setText('laporan-subtitle', _laporanModeAdmin ? 'Rekap kehadiran semua guru & pegawai' : 'Rekap kehadiran pribadi');
+
+  // Tab "Izin" (rekap izin semua orang) hanya relevan untuk admin/kepsek.
+  // Guru/Pegawai sudah punya riwayat izin pribadi di menu Izin > Riwayat.
+  const tabIzinEl = document.getElementById('laporan-tab-izin');
+  if (tabIzinEl) tabIzinEl.classList.toggle('hidden', !_laporanModeAdmin);
+
+  // Tampilkan dropdown pilih guru & tombol cetak PDF hanya untuk admin/kepsek
+  const pilihGuruWrap = document.getElementById('laporan-pilih-guru-wrap');
+  const btnCetakPDF   = document.getElementById('btn-cetak-pdf-laporan');
+  if (pilihGuruWrap) pilihGuruWrap.style.display = _laporanModeAdmin ? '' : 'none';
+  if (btnCetakPDF)   btnCetakPDF.style.display   = _laporanModeAdmin ? '' : 'none';
+
+  // Muat daftar guru untuk dropdown (hanya sekali)
+  if (_laporanModeAdmin && !_laporanGuruList.length) {
+    await muatGuruListUntukDropdown();
+  }
+  if (!_laporanModeAdmin) {
+    _laporanTab = 'rekap';
+    document.querySelectorAll('.laporan-tab').forEach(b => {
+      const aktif = b.dataset.tab === 'rekap';
+      b.classList.toggle('active', aktif);
+      b.style.background = aktif ? 'var(--primary-600)' : 'var(--gray-200)';
+      b.style.color = aktif ? '#fff' : 'var(--gray-700)';
+    });
+  }
  
   // Isi dropdown tahun (5 tahun ke belakang)
   if (tahunEl && !tahunEl.children.length) {
@@ -6690,26 +7234,30 @@ async function muatLaporan() {
     tahunEl.value = now.getFullYear();
   }
  
-  // Tab switching
-  document.querySelectorAll('.laporan-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      _laporanTab = btn.dataset.tab;
-      document.querySelectorAll('.laporan-tab').forEach(b => {
-        b.style.background = 'var(--gray-200)';
-        b.style.color = 'var(--gray-700)';
+  // Tab switching (guard agar tidak didaftarkan berkali-kali)
+  if (!_laporanListenersSiap) {
+    document.querySelectorAll('.laporan-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('hidden')) return;
+        _laporanTab = btn.dataset.tab;
+        document.querySelectorAll('.laporan-tab').forEach(b => {
+          b.style.background = 'var(--gray-200)';
+          b.style.color = 'var(--gray-700)';
+        });
+        btn.style.background = 'var(--primary-600)';
+        btn.style.color = '#fff';
+        renderLaporanTab();
       });
-      btn.style.background = 'var(--primary-600)';
-      btn.style.color = '#fff';
-      renderLaporanTab();
     });
-  });
  
-  // Filter button
-  document.getElementById('btn-laporan-filter')?.addEventListener('click', fetchLaporanData);
- 
-  // Export
-  document.getElementById('btn-export-laporan')?.addEventListener('click', exportLaporanCSV);
+    document.getElementById('btn-laporan-filter')?.addEventListener('click', fetchLaporanData);
+    document.getElementById('btn-export-laporan')?.addEventListener('click', exportLaporanCSV);
+    document.getElementById('btn-cetak-pdf-laporan')?.addEventListener('click', cetakPDFLaporan);
+    setupDropdownGuruLaporan();
+    _laporanListenersSiap = true;
+  }
 }
+let _laporanListenersSiap = false;
  
 async function fetchLaporanData() {
   const bln = parseInt(document.getElementById('laporan-bulan')?.value);
@@ -6718,18 +7266,56 @@ async function fetchLaporanData() {
   if (!bln || !thn || !content) return;
  
   content.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><span class="material-symbols-rounded" style="animation:spin 1s linear infinite;">progress_activity</span></div><div class="empty-state-title">Memuat data...</div></div>`;
- 
-  const [rekap, izin] = await Promise.all([
-    sb.rpc('laporan_rekapitulasi_bulan', { bln, thn }),
-    sb.rpc('laporan_izin_bulan',          { bln, thn }),
-  ]);
- 
-  _laporanData.rekap = rekap.data || [];
-  _laporanData.izin  = izin.data  || [];
- 
+
   const namaBulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
   const subtitle = document.getElementById('laporan-subtitle');
-  if (subtitle) subtitle.textContent = `${namaBulan[bln-1]} ${thn}`;
+
+  if (_laporanModeAdmin) {
+    if (_laporanGuruTerpilih) {
+      // Mode: admin pilih 1 orang → tampilkan detail individu
+      const tglDari   = `${thn}-${String(bln).padStart(2,'0')}-01`;
+      const tglSampai = new Date(thn, bln, 0).toISOString().slice(0, 10);
+      const { data, error } = await sb.rpc('laporan_detail_guru', {
+        target_guru_id: _laporanGuruTerpilih.id,
+        tgl_dari: tglDari,
+        tgl_sampai: tglSampai,
+      });
+      if (error) {
+        content.innerHTML = `<div class="empty-state"><div class="empty-state-title">Gagal memuat</div><div class="empty-state-sub">${error.message}</div></div>`;
+        return;
+      }
+      _laporanData.detailPribadi = data || [];
+      if (subtitle) subtitle.textContent = `${namaBulan[bln-1]} ${thn} · ${_laporanGuruTerpilih.nama}`;
+    } else {
+      // Mode: semua orang (rekap)
+      const [rekap, izin] = await Promise.all([
+        sb.rpc('laporan_rekapitulasi_bulan', { bln, thn }),
+        sb.rpc('laporan_izin_bulan',          { bln, thn }),
+      ]);
+      _laporanData.rekap = rekap.data || [];
+      _laporanData.izin  = izin.data  || [];
+      if (subtitle) subtitle.textContent = `${namaBulan[bln-1]} ${thn} · Semua guru & pegawai`;
+    }
+  } else {
+    // Mode pribadi: pakai RPC laporan_detail_guru yang sudah mengizinkan
+    // guru melihat datanya sendiri (auth.uid() = target_guru_id di backend).
+    const tglDari   = `${thn}-${String(bln).padStart(2,'0')}-01`;
+    const tglSampai = new Date(thn, bln, 0).toISOString().slice(0, 10); // hari terakhir bulan itu
+
+    const { data, error } = await sb.rpc('laporan_detail_guru', {
+      target_guru_id: APP.user.id,
+      tgl_dari: tglDari,
+      tgl_sampai: tglSampai,
+    });
+
+    if (error) {
+      content.innerHTML = `<div class="empty-state"><div class="empty-state-title">Gagal memuat</div><div class="empty-state-sub">${error.message}</div></div>`;
+      return;
+    }
+
+    _laporanData.detailPribadi = data || [];
+    if (subtitle) subtitle.textContent = `${namaBulan[bln-1]} ${thn} · Rekap pribadi`;
+  }
  
   renderLaporanTab();
 }
@@ -6737,6 +7323,11 @@ async function fetchLaporanData() {
 function renderLaporanTab() {
   const content = document.getElementById('laporan-content');
   if (!content) return;
+
+  if (!_laporanModeAdmin || _laporanGuruTerpilih) {
+    renderLaporanPribadi(_laporanGuruTerpilih);
+    return;
+  }
  
   if (_laporanTab === 'rekap') {
     const data = _laporanData.rekap;
@@ -6803,8 +7394,95 @@ function renderLaporanTab() {
     content.innerHTML = `<div style="padding:0 16px;">${cards}<div style="height:16px;"></div></div>`;
   }
 }
+
+function renderLaporanPribadi(guruInfo) {
+  const content = document.getElementById('laporan-content');
+  if (!content) return;
+
+  const data = _laporanData.detailPribadi || [];
+
+  const hadir     = data.filter(r => r.status_kehadiran === 'Hadir').length;
+  const terlambat = data.filter(r => r.status_kehadiran === 'Terlambat').length;
+  const sakit     = data.filter(r => r.status_kehadiran === 'Sakit').length;
+  const izin      = data.filter(r => r.status_kehadiran === 'Izin').length;
+  const alfa      = data.filter(r => r.status_kehadiran === 'Alfa').length;
+
+  // Kartu info identitas (jika admin lagi lihat orang tertentu)
+  const kartuIdentitas = guruInfo ? `
+    <div style="margin:0 16px 12px;padding:10px 14px;background:var(--primary-50);border-radius:var(--radius-md);border-left:3px solid var(--primary-600);">
+      <div style="font-size:13px;font-weight:700;color:var(--primary-800);">${escapeHTML(guruInfo.nama||'—')}</div>
+      <div style="font-size:11px;color:var(--primary-600);">NIP: ${escapeHTML(guruInfo.nip||'—')} · ${escapeHTML(guruInfo.mapel||guruInfo.pangkat||guruInfo.role||'—')}</div>
+    </div>` : '';
+
+  const kartuRingkasan = kartuIdentitas + `
+    <div class="stats-grid" style="padding:0 16px;margin-bottom:16px;">
+      <div class="stat-card">
+        <div class="stat-card-header"><div class="stat-icon green"><span class="material-symbols-rounded">check_circle</span></div></div>
+        <div class="stat-value">${hadir}</div>
+        <div class="stat-label">Hari Hadir</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header"><div class="stat-icon orange"><span class="material-symbols-rounded">schedule</span></div></div>
+        <div class="stat-value">${terlambat}</div>
+        <div class="stat-label">Terlambat</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header"><div class="stat-icon blue"><span class="material-symbols-rounded">medical_services</span></div></div>
+        <div class="stat-value">${sakit}</div>
+        <div class="stat-label">Sakit</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header"><div class="stat-icon red"><span class="material-symbols-rounded">event_busy</span></div></div>
+        <div class="stat-value">${izin}</div>
+        <div class="stat-label">Izin</div>
+      </div>
+    </div>`;
+
+  if (!data.length) {
+    content.innerHTML = kartuRingkasan + `<div class="empty-state"><div class="empty-state-icon"><span class="material-symbols-rounded">inbox</span></div><div class="empty-state-title">Belum ada riwayat absen di bulan ini</div></div>`;
+    return;
+  }
+
+  const rows = data.map(r => {
+    const warnaStatus = {
+      'Hadir': 'var(--success-600)', 'Terlambat': 'var(--warning-600)',
+      'Sakit': 'var(--info-500)', 'Izin': 'var(--primary-600)',
+    }[r.status_kehadiran] || 'var(--gray-600)';
+    const jamMasuk  = r.waktu_masuk  ? new Date(r.waktu_masuk).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', hour12:false }) : '-';
+    const jamPulang = r.waktu_pulang ? new Date(r.waktu_pulang).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', hour12:false }) : '-';
+    return `
+      <div style="background:#fff;border-radius:var(--radius-md);padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow-xs);display:flex;align-items:center;gap:12px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:13px;">${new Date(r.tanggal + 'T00:00:00').toLocaleDateString('id-ID', { weekday:'short', day:'numeric', month:'short' })}</div>
+          <div style="font-size:11px;color:var(--gray-500);">Masuk ${jamMasuk} · Pulang ${jamPulang}</div>
+        </div>
+        <span style="font-size:11px;font-weight:700;color:${warnaStatus};background:${warnaStatus}15;padding:4px 10px;border-radius:var(--radius-full);">${escapeHTML(r.status_kehadiran || '-')}</span>
+      </div>`;
+  }).join('');
+
+  content.innerHTML = kartuRingkasan + `<div style="padding:0 16px;">${rows}<div style="height:16px;"></div></div>`;
+}
  
 function exportLaporanCSV() {
+  if (!_laporanModeAdmin) {
+    const data = _laporanData.detailPribadi || [];
+    if (!data.length) { toast('Muat data laporan terlebih dahulu', 'warning'); return; }
+    const headers = ['Tanggal','Status','Jenis Absen','Waktu Masuk','Waktu Pulang','Lokasi Masuk','Lokasi Pulang'];
+    const rows = data.map(r => [
+      r.tanggal, r.status_kehadiran, r.jenis_absen,
+      r.waktu_masuk ? new Date(r.waktu_masuk).toLocaleTimeString('id-ID') : '',
+      r.waktu_pulang ? new Date(r.waktu_pulang).toLocaleTimeString('id-ID') : '',
+      r.status_lokasi_masuk, r.status_lokasi_pulang,
+    ].map(v => `"${(v??'').toString().replace(/"/g,'""')}"`).join(','));
+    const csv = [headers.join(','), ...rows].join('\n');
+    const url = URL.createObjectURL(new Blob(['\uFEFF'+csv], { type: 'text/csv;charset=utf-8;' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = `laporan_saya_${new Date().toISOString().slice(0,7)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+    toast('✅ File CSV berhasil diunduh', 'success');
+    return;
+  }
+
   if (!_laporanData.rekap.length) { toast('Muat data laporan terlebih dahulu', 'warning'); return; }
   const headers = ['Nama','NIP','Pangkat','Mapel','Role','Hadir','Terlambat','Sakit','Izin','Alfa','Hari Kerja'];
   const rows = _laporanData.rekap.map(r =>
@@ -6821,6 +7499,619 @@ function exportLaporanCSV() {
 }
  
  
+/* ============================================================
+   LAPORAN — FUNGSI DROPDOWN PILIH GURU
+============================================================ */
+async function muatGuruListUntukDropdown() {
+  const { data } = await sb
+    .from('profiles')
+    .select('id, nama, nip, pangkat, mapel, kelamin, role, tipe_kehadiran')
+    .order('nama', { ascending: true });
+  _laporanGuruList = data || [];
+}
+
+function setupDropdownGuruLaporan() {
+  const input    = document.getElementById('laporan-guru-search-input');
+  const dropdown = document.getElementById('laporan-guru-dropdown');
+  if (!input || !dropdown) return;
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    if (!q) { dropdown.style.display = 'none'; return; }
+    const cocok = _laporanGuruList.filter(g =>
+      (g.nama||'').toLowerCase().includes(q) ||
+      (g.nip||'').toLowerCase().includes(q) ||
+      (g.mapel||'').toLowerCase().includes(q)
+    ).slice(0, 8);
+    if (!cocok.length) { dropdown.style.display = 'none'; return; }
+    dropdown.innerHTML = cocok.map(g => `
+      <div data-id="${g.id}" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--gray-100);font-size:13px;"
+           onmouseover="this.style.background='var(--gray-50)'" onmouseout="this.style.background=''"
+           onclick="pilihGuruLaporan('${g.id}')">
+        <div style="font-weight:600;">${escapeHTML(g.nama||'—')}</div>
+        <div style="font-size:11px;color:var(--gray-500);">${escapeHTML(g.nip||'—')} · ${escapeHTML(g.mapel||g.pangkat||g.role||'—')}</div>
+      </div>`).join('');
+    dropdown.style.display = '';
+  });
+
+  // Tutup dropdown jika klik di luar
+  document.addEventListener('click', (e) => {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.style.display = 'none';
+    }
+  });
+}
+
+function pilihGuruLaporan(guruId) {
+  const guru = _laporanGuruList.find(g => g.id === guruId);
+  if (!guru) return;
+  _laporanGuruTerpilih = guru;
+
+  const input    = document.getElementById('laporan-guru-search-input');
+  const dropdown = document.getElementById('laporan-guru-dropdown');
+  const badge    = document.getElementById('laporan-guru-terpilih');
+  const badgeNama = document.getElementById('laporan-guru-terpilih-nama');
+
+  if (input)    input.value = '';
+  if (dropdown) dropdown.style.display = 'none';
+  if (badgeNama) badgeNama.textContent = `👤 ${guru.nama}`;
+  if (badge)    badge.style.display = 'flex';
+
+  // Re-fetch data untuk orang ini (jika data sudah dimuat di bulan yang sama, langsung render)
+  fetchLaporanData();
+}
+
+function clearGuruTerpilih() {
+  _laporanGuruTerpilih = null;
+  const badge = document.getElementById('laporan-guru-terpilih');
+  if (badge) badge.style.display = 'none';
+  // Kembali ke mode semua
+  if (_laporanData.rekap.length) {
+    renderLaporanTab();
+  }
+}
+
+/* ============================================================
+   LAPORAN — CETAK PDF  (versi 2 — preview blob, Arial, kop profesional)
+============================================================ */
+
+// Referensi blob PDF aktif (untuk tombol unduh & buka tab)
+let _pdfBlobUrl  = null;
+let _pdfFileName = '';
+
+async function cetakPDFLaporan() {
+  if (!_laporanData.rekap.length && !_laporanData.detailPribadi.length) {
+    toast('Muat data laporan terlebih dahulu', 'warning'); return;
+  }
+
+  toast('Membuat PDF…', 'info');
+
+  // ── Load jsPDF ─────────────────────────────────────────────────────────
+  if (!window.jspdf) {
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s.onload = res; s.onerror = rej; document.head.appendChild(s);
+    });
+  }
+  if (!window.jspdf?.jsPDF?.API?.autoTable) {
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
+      s.onload = res; s.onerror = rej; document.head.appendChild(s);
+    });
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  // ── Konstanta layout ───────────────────────────────────────────────────
+  const W  = 210;          // lebar A4
+  const ML = 15;           // margin kiri
+  const MR = 15;           // margin kanan
+  const CW = W - ML - MR; // lebar konten
+
+  // ── Palet warna ────────────────────────────────────────────────────────
+  const C_BIRU  = [21,  101, 192];
+  const C_HITAM = [17,  17,  17];
+  const C_ABU   = [100, 100, 100];
+  const C_HIJAU = [46,  125,  50];
+  const C_ORNG  = [230,  81,   0];
+  const C_UNGU  = [26,   35, 126];
+  const C_MERAH = [183,  28,  28];
+
+  // ── Bulan & tahun ─────────────────────────────────────────────────────
+  const bln = parseInt(document.getElementById('laporan-bulan')?.value) || new Date().getMonth() + 1;
+  const thn = parseInt(document.getElementById('laporan-tahun')?.value) || new Date().getFullYear();
+  const NAMA_BULAN = ['Januari','Februari','Maret','April','Mei','Juni',
+                      'Juli','Agustus','September','Oktober','November','Desember'];
+  const bulanLabel = NAMA_BULAN[bln - 1];
+  
+  // ── Helper: label jabatan berdasarkan role ────────────────────────────
+  function labelJabatan(r) {
+    if (r.role === 'kepsek')  return 'Kepala Sekolah';
+    if (r.role === 'pegawai') return r.pangkat || 'Pegawai';
+    return r.mapel || r.pangkat || 'Guru';
+  }
+
+  // ── Data sekolah ──────────────────────────────────────────────────────
+  const sk = APP.sekolah || {};
+
+  // ── Data kepsek (ambil pangkat juga) ──────────────────────────────────
+  let kepsekNama = '', kepsekNIP = '', kepsekPangkat = '';
+  const kdList = _laporanGuruList || [];
+  let kd = kdList.find(g => g.role === 'kepsek');
+  if (!kd) {
+    const { data } = await sb.from('profiles')
+      .select('nama,nip,pangkat')
+      .eq('role', 'kepsek')
+      .single();
+    if (data) { kepsekNama = data.nama||''; kepsekNIP = data.nip||''; kepsekPangkat = data.pangkat||''; }
+  } else {
+    kepsekNama    = kd.nama    || '';
+    kepsekNIP     = kd.nip     || '';
+    kepsekPangkat = kd.pangkat || '';
+  }
+
+  // ── Tanggal tanda tangan (hardcode Makassar) ──────────────────────────
+  const now    = new Date();
+  const tglTtd = now.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+  const lokasiTtd = 'Makassar';
+
+  // ── Helper: load gambar URL → base64 ──────────────────────────────────
+  async function urlToBase64(url) {
+    try {
+      const r  = await fetch(url);
+      const b  = await r.blob();
+      return await new Promise(res => {
+        const rd = new FileReader();
+        rd.onloadend = () => res(rd.result);
+        rd.readAsDataURL(b);
+      });
+    } catch { return null; }
+  }
+
+  // ── Helper: deteksi tipe gambar ───────────────────────────────────────
+  function imgType(url) {
+    const ext = (url||'').split('?')[0].split('.').pop().toLowerCase();
+    return ext === 'jpg' || ext === 'jpeg' ? 'JPEG' : 'PNG';
+  }
+
+  // ── Gambar KOP SURAT ─────────────────────────────────────────────────
+  async function gambarKop(doc, yStart) {
+    const LOGO_H = 22;   // tinggi logo mm
+    const LOGO_W = 22;   // lebar  logo mm
+    const CX     = W / 2;
+
+    // Logo kiri
+    if (sk.logo_kiri) {
+      const b64 = await urlToBase64(sk.logo_kiri);
+      if (b64) {
+        try { doc.addImage(b64, imgType(sk.logo_kiri), ML, yStart, LOGO_W, LOGO_H); } catch(e){}
+      }
+    }
+    // Logo kanan
+    if (sk.logo_kanan) {
+      const b64 = await urlToBase64(sk.logo_kanan);
+      if (b64) {
+        try { doc.addImage(b64, imgType(sk.logo_kanan), W - MR - LOGO_W, yStart, LOGO_W, LOGO_H); } catch(e){}
+      }
+    }
+
+    // Teks kop — rata tengah di antara dua logo
+    let ty = yStart + 3;
+
+    // Pemerintah  — Arial 12 normal
+    if (sk.pemerintah) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+      doc.setTextColor(...C_HITAM);
+      doc.text((sk.pemerintah).toUpperCase(), CX, ty, { align: 'center' });
+      ty += 5.5;
+    }
+
+    // Instansi — Arial 12 normal
+    if (sk.instansi) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+      doc.setTextColor(...C_HITAM);
+      doc.text((sk.instansi).toUpperCase(), CX, ty, { align: 'center' });
+      ty += 5.5;
+    }
+
+    // Nama Sekolah — Arial 14 bold
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(...C_HITAM);
+    doc.text((sk.nama_sekolah || 'SEKOLAH').toUpperCase(), CX, ty, { align: 'center' });
+    ty += 6;
+
+    // Alamat + NPSN — Arial 11 normal
+    const bagianAlamat = [
+      sk.alamat,
+      sk.npsn ? 'NPSN: ' + sk.npsn : ''
+    ].filter(Boolean).join('   |   ');
+    if (bagianAlamat) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.setTextColor(...C_ABU);
+      doc.text(bagianAlamat, CX, ty, { align: 'center' });
+      ty += 5;
+    }
+
+    // Garis pembatas kop — tebal biru + tipis
+    const gY = Math.max(yStart + LOGO_H + 2, ty + 1);
+    doc.setDrawColor(...C_BIRU); doc.setLineWidth(1.0);
+    doc.line(ML, gY, W - MR, gY);
+    doc.setDrawColor(...C_BIRU); doc.setLineWidth(0.3);
+    doc.line(ML, gY + 1.5, W - MR, gY + 1.5);
+
+    return gY + 5; // kembalikan posisi Y setelah kop
+  }
+
+  // ── Helper: gambar blok tanda tangan ─────────────────────────────────
+  function gambarTTD(doc, x, y, lebar, label1, label2, nama, pangkat, nip) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(...C_HITAM);
+    if (label1) { doc.text(label1, x + lebar / 2, y, { align: 'center' }); y += 5; }
+    if (label2) { doc.text(label2, x + lebar / 2, y, { align: 'center' }); y += 5; }
+
+    // Spasi tanda tangan (3 baris kosong)
+    y += 16;
+
+    // Garis tanda tangan
+    doc.setDrawColor(...C_ABU); doc.setLineWidth(0.4);
+    doc.line(x, y, x + lebar, y); y += 5;
+
+    // Nama — bold
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...C_HITAM);
+    doc.text(nama || '—', x + lebar / 2, y, { align: 'center' }); y += 5;
+
+    // Pangkat (jika ada)
+    if (pangkat) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(...C_ABU);
+      doc.text(pangkat, x + lebar / 2, y, { align: 'center' }); y += 5;
+    }
+
+    // NIP
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(...C_ABU);
+    doc.text('NIP. ' + (nip || '—'), x + lebar / 2, y, { align: 'center' });
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  //  PDF JENIS 2: LAPORAN PER GURU
+  // ══════════════════════════════════════════════════════════════════════
+  if (_laporanGuruTerpilih) {
+    const guru   = _laporanGuruTerpilih;
+    const detail = _laporanData.detailPribadi || [];
+
+    const hadir     = detail.filter(r => r.status_kehadiran === 'Hadir').length;
+    const terlambat = detail.filter(r => r.status_kehadiran === 'Terlambat').length;
+    const sakit     = detail.filter(r => r.status_kehadiran === 'Sakit').length;
+    const izin      = detail.filter(r => r.status_kehadiran === 'Izin').length;
+    const alfa      = detail.filter(r => r.status_kehadiran === 'Alfa').length;
+    const total     = detail.length;
+
+    let y = await gambarKop(doc, 10);
+
+    // ── Judul laporan ──────────────────────────────────────────────────
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(...C_BIRU);
+    doc.text('LAPORAN KEHADIRAN INDIVIDU', W / 2, y, { align: 'center' });
+    y += 5.5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(...C_ABU);
+    doc.text(`Bulan ${bulanLabel} ${thn}`, W / 2, y, { align: 'center' });
+    y += 7;
+
+    // ── Identitas guru (manual — titik dua rata) ───────────────────────
+    const identRows = [
+      ['Nama',            guru.nama || '—'],
+      ['NIP',             guru.nip  || '—'],
+      ['Jabatan / Mapel', guru.mapel || guru.pangkat || '—'],
+      ['Tipe Kehadiran',  guru.tipe_kehadiran || 'Global'],
+    ];
+    const IDENT_KEY_W = 38; // lebar kolom kiri (label)
+    const IDENT_VAL_X = ML + IDENT_KEY_W + 4; // posisi X titik dua & nilai
+    doc.setFontSize(11); doc.setFont('helvetica', 'normal');
+    identRows.forEach(([key, val]) => {
+      doc.setTextColor(...C_HITAM);
+      doc.setFont('helvetica', 'bold');
+      doc.text(key, ML, y);
+      doc.setFont('helvetica', 'normal');
+      doc.text(': ' + val, IDENT_VAL_X, y);
+      y += 6;
+    });
+    y += 3;
+
+    // ── Kotak ringkasan statistik ──────────────────────────────────────
+    const statItems = [
+      { label: 'HADIR',     val: hadir,     fg: C_HIJAU, bg: [232,245,233] },
+      { label: 'TERLAMBAT', val: terlambat, fg: C_ORNG,  bg: [255,243,224] },
+      { label: 'SAKIT',     val: sakit,     fg: C_UNGU,  bg: [232,234,246] },
+      { label: 'IZIN',      val: izin,      fg: C_BIRU,  bg: [227,242,253] },
+      { label: 'ALFA',      val: alfa,      fg: C_MERAH, bg: [255,235,238] },
+    ];
+    const boxW = (CW - 4) / 5;
+    statItems.forEach(({ label, val, fg, bg }, i) => {
+      const bx = ML + i * (boxW + 1);
+      doc.setFillColor(...bg);
+      doc.roundedRect(bx, y, boxW, 16, 2, 2, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(15);
+      doc.setTextColor(...fg);
+      doc.text(String(val), bx + boxW / 2, y + 8.5, { align: 'center' });
+      doc.setFontSize(6.5);
+      doc.text(label, bx + boxW / 2, y + 13.5, { align: 'center' });
+    });
+    y += 20;
+
+    // ── Tabel detail harian ────────────────────────────────────────────
+    const statusWarna = s => ({
+      'Hadir':            C_HIJAU,
+      'Terlambat':        C_ORNG,
+      'Sakit':            C_UNGU,
+      'Izin':             C_BIRU,
+      'Alfa':             C_MERAH,
+      'Libur':            C_ABU,
+      'Tidak Ada Jadwal': C_ABU,
+    }[s] || [80, 80, 80]);
+
+    const tableRows = detail.map(r => {
+      const tgl = new Date(r.tanggal + 'T00:00:00')
+        .toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const jM = r.waktu_masuk
+        ? new Date(r.waktu_masuk).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false })
+        : '—';
+      const jP = r.waktu_pulang
+        ? new Date(r.waktu_pulang).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false })
+        : '—';
+      const ket = r.keterangan || '';
+      return [tgl, r.status_kehadiran || '—', jM, jP, ket];
+    });
+
+    doc.autoTable({
+      startY: y,
+      head: [['Tanggal', 'Status', 'Jam Masuk', 'Jam Pulang', 'Keterangan']],
+      body: tableRows,
+      margin: { left: ML, right: MR },
+      styles: {
+        fontSize: 11, cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 },
+        valign: 'middle', font: 'helvetica', halign: 'center',
+        lineColor: [17, 17, 17], lineWidth: 0.3,
+      },
+      headStyles: {
+        fillColor: [230, 230, 230], textColor: [17, 17, 17],
+        fontStyle: 'bold', fontSize: 11, halign: 'center',
+        lineColor: [17, 17, 17], lineWidth: 0.3,
+      },
+      alternateRowStyles: { fillColor: [248, 249, 252] },
+      columnStyles: {
+        0: { cellWidth: 50, halign: 'center' },
+        1: { cellWidth: 28, fontStyle: 'bold', halign: 'center' },
+        2: { cellWidth: 24, halign: 'center' },
+        3: { cellWidth: 24, halign: 'center' },
+        4: { cellWidth: 'auto', halign: 'center' },
+      },
+      didDrawCell(data) {
+        if (data.section === 'body' && data.column.index === 1) {
+          data.cell.styles.textColor = statusWarna(data.cell.raw);
+        }
+      },
+    });
+
+    y = doc.lastAutoTable.finalY + 12;
+
+    // ── Tanda tangan per guru: KIRI = Kepsek, KANAN = Guru ────────────
+    if (y > 248) { doc.addPage(); y = 20; }
+
+    const ttdLebar = (CW - 10) / 2;
+    const ttdKiri  = ML;
+    const ttdKanan = ML + ttdLebar + 10;
+    const CX_KIRI  = ttdKiri  + ttdLebar / 2;
+    const CX_KANAN = ttdKanan + ttdLebar / 2;
+
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(...C_HITAM);
+
+    // Baris 1: Mengetahui, | Makassar, tgl
+    doc.text('Mengetahui,',                CX_KIRI,  y, { align: 'center' });
+    doc.text(`${lokasiTtd}, ${tglTtd}`,   CX_KANAN, y, { align: 'center' });
+    y += 5.5;
+
+    // Baris 2: Kepala Sekolah | Guru Bersangkutan
+    doc.text('Kepala Sekolah',             CX_KIRI,  y, { align: 'center' });
+    doc.text('Guru Bersangkutan',          CX_KANAN, y, { align: 'center' });
+    y += 20; // spasi tanda tangan
+
+    // Nama kepsek | Nama guru
+    doc.setFont('helvetica', 'bold');
+    doc.text(kepsekNama || '—', CX_KIRI,  y, { align: 'center' });
+    doc.text(guru.nama  || '—', CX_KANAN, y, { align: 'center' });
+    y += 5.5;
+
+    // NIP kepsek | NIP guru
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(...C_ABU);
+    doc.text('NIP. ' + (kepsekNIP || '—'), CX_KIRI,  y, { align: 'center' });
+    doc.text('NIP. ' + (guru.nip  || '—'), CX_KANAN, y, { align: 'center' });
+
+    _pdfFileName = `Laporan_${(guru.nama||'guru').replace(/\s+/g,'_')}_${bulanLabel}_${thn}.pdf`;
+
+  } else {
+    // ══════════════════════════════════════════════════════════════════════
+    //  PDF JENIS 1: REKAPITULASI SEMUA GURU
+    // ══════════════════════════════════════════════════════════════════════
+
+    const rekap = (_laporanData.rekap || [])
+	  .filter(r => (r.role_guru || r.role) !== 'admin')
+	  .sort((a, b) => {
+		const roleA = a.role_guru || a.role || '';
+		const roleB = b.role_guru || b.role || '';
+		if (roleA === 'kepsek' && roleB !== 'kepsek') return -1;
+		if (roleB === 'kepsek' && roleA !== 'kepsek') return  1;
+		return (a.nama || '').localeCompare(b.nama || '', 'id');
+	  });
+
+    let y = await gambarKop(doc, 10);
+
+    // ── Judul ──────────────────────────────────────────────────────────
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(...C_BIRU);
+    doc.text('LAPORAN REKAPITULASI KEHADIRAN', W / 2, y, { align: 'center' });
+    y += 5.5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(...C_ABU);
+    doc.text(`Bulan ${bulanLabel} ${thn}`, W / 2, y, { align: 'center' });
+    y += 9;
+
+    // ── Helper jabatan ─────────────────────────────────────────────────
+    function labelJabatan(r) {
+      const role = r.role_guru || r.role || '';
+      if (role === 'kepsek')  return 'Kepala Sekolah';
+      if (role === 'pegawai') return r.pangkat || 'Pegawai';
+      return r.mapel || r.pangkat || 'Guru';
+    }
+
+    // ── Tabel rekap semua guru ─────────────────────────────────────────
+    const tabelBody = rekap.map((r, i) => [
+      i + 1,
+      (r.nama || '—') + '\n' + 'NIP. ' + (r.nip || '—'),
+      r.kelamin ? r.kelamin.toUpperCase() : '—',
+      labelJabatan(r),
+      r.hadir            || 0,
+      r.terlambat        || 0,
+      r.sakit            || 0,
+      r.izin             || 0,
+      r.alfa             || 0,
+      r.total_hari_kerja || 0,
+    ]);
+
+    doc.autoTable({
+      startY: y,
+      head: [['No', 'Nama / NIP', 'L/P', 'Jabatan', 'H', 'T', 'S', 'I', 'A', 'Hr Kerja']],
+      body: tabelBody,
+      margin: { left: ML, right: MR },
+      styles: {
+        fontSize: 8.5,
+        cellPadding: { top: 3, bottom: 3, left: 3, right: 3 },
+        valign: 'middle',
+        font: 'helvetica',
+        lineColor: [200, 200, 200],
+        lineWidth: 0.25,
+        overflow: 'linebreak',
+      },
+      headStyles: {
+        fillColor: C_BIRU,
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 8.5,
+        halign: 'center',
+        lineColor: [200, 200, 200],
+        lineWidth: 0.25,
+      },
+      alternateRowStyles: { fillColor: [248, 249, 252] },
+      columnStyles: {
+        0: { cellWidth: 12,   halign: 'center' },
+        1: { cellWidth: 55,   halign: 'left'   },
+        2: { cellWidth: 12,   halign: 'center' },
+        3: { cellWidth: 30,   halign: 'left'   },
+        4: { cellWidth: 9,    halign: 'center', fontStyle: 'bold', textColor: C_HIJAU },
+        5: { cellWidth: 9,    halign: 'center', fontStyle: 'bold', textColor: C_ORNG  },
+        6: { cellWidth: 9,    halign: 'center', fontStyle: 'bold', textColor: C_UNGU  },
+        7: { cellWidth: 9,    halign: 'center', fontStyle: 'bold', textColor: C_BIRU  },
+        8: { cellWidth: 9,    halign: 'center', fontStyle: 'bold', textColor: C_MERAH },
+        9: { cellWidth: 'auto', halign: 'center' },
+      },
+      didDrawCell(data) {
+        if (data.section === 'body' && data.column.index === 1) {
+          const { x, y: cy, width, height } = data.cell;
+          const baris = String(data.cell.raw).split('\n');
+          const nama  = baris[0] || '—';
+          const nip   = baris[1] || '';
+          doc.setFillColor(...(data.row.index % 2 === 0 ? [255,255,255] : [248,249,252]));
+          doc.rect(x + 0.15, cy + 0.15, width - 0.3, height - 0.3, 'F');
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8.5);
+          doc.setTextColor(17, 17, 17);
+          doc.text(nama, x + 3, cy + height / 2 - 1.5, { maxWidth: width - 5 });
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(7.5);
+          doc.setTextColor(130, 130, 130);
+          doc.text(nip, x + 3, cy + height / 2 + 3.5, { maxWidth: width - 5 });
+        }
+      },
+    });
+
+    y = doc.lastAutoTable.finalY + 14;
+
+    // ── Tanda tangan — Kepala Sekolah, tengah halaman ─────────────────
+    if (y > 245) { doc.addPage(); y = 20; }
+
+    const ttdLebar = 65;
+    const ttdX     = (W - ttdLebar) / 2;  // tengah
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(...C_HITAM);
+    doc.text(`${lokasiTtd}, ${tglTtd}`, W / 2, y, { align: 'center' });
+    y += 6;
+
+    gambarTTD(doc, ttdX, y, ttdLebar,
+      'Mengetahui,', 'Kepala Sekolah,',
+      kepsekNama, kepsekPangkat, kepsekNIP);
+
+    _pdfFileName = `Rekap_Kehadiran_${bulanLabel}_${thn}.pdf`;
+  }
+
+  // ── Buat Blob URL & tampilkan modal preview ────────────────────────────
+  try {
+    // Bebaskan blob lama jika ada
+    if (_pdfBlobUrl) { URL.revokeObjectURL(_pdfBlobUrl); _pdfBlobUrl = null; }
+
+    const blob   = doc.output('blob');
+    _pdfBlobUrl  = URL.createObjectURL(blob);
+
+    // Isi iframe
+    const frame  = document.getElementById('pdf-preview-frame');
+    const title  = document.getElementById('pdf-preview-title');
+    if (frame)  frame.src = _pdfBlobUrl;
+    if (title)  title.textContent = _pdfFileName;
+
+    // Buka modal
+    bukaModal('modal-preview-pdf');
+    toast('✅ PDF siap — periksa pratinjau', 'success');
+
+  } catch (err) {
+    console.error('PDF blob error:', err);
+    toast('Gagal membuat pratinjau PDF', 'error');
+  }
+}
+
+// ── Tombol Unduh di modal preview ─────────────────────────────────────────
+function unduhPDFDariPreview() {
+  if (!_pdfBlobUrl) { toast('Tidak ada PDF untuk diunduh', 'warning'); return; }
+  const a      = document.createElement('a');
+  a.href       = _pdfBlobUrl;
+  a.download   = _pdfFileName || 'laporan.pdf';
+  a.click();
+}
+
+// ── Tombol Buka Tab di modal preview ──────────────────────────────────────
+function bukaTabPDF() {
+  if (!_pdfBlobUrl) { toast('Tidak ada PDF', 'warning'); return; }
+  window.open(_pdfBlobUrl, '_blank');
+}
+
 /* ============================================================
    KELOLA GURU — query langsung ke profiles (tanpa RPC)
 ============================================================ */
@@ -6904,7 +8195,7 @@ function renderKelolaGuruList() {
  
   list.innerHTML = data.map(g => `
     <div style="background:#fff;border-radius:var(--radius-md);padding:14px 16px;margin:0 16px 8px;box-shadow:var(--shadow-xs);display:flex;align-items:center;gap:12px;">
-      <div style="width:42px;height:42px;border-radius:50%;background:var(--primary-600);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;">${inisial(g.nama || '?')}</div>
+      ${htmlAvatar(g.nama || '?', g.foto_profil_id || null, 42)}
       <div style="flex:1;min-width:0;">
         <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.nama || '-')}</div>
         <div style="font-size:11px;color:var(--gray-500);">NIP: ${escapeHTML(g.nip || '-')} · ${escapeHTML(g.mapel || '-')}</div>
@@ -7152,7 +8443,7 @@ async function simpanEditAkun() {
 /* ============================================================
    23. DATA SEKOLAH (Admin) — identitas, koordinat, radius
    ============================================================ */
-async function muatDataSekolah() {
+async function muatFormDataSekolah() {
   try {
     const { data, error } = await sb.from('data_sekolah').select('*').eq('id', 1).single();
     if (error) throw new Error(error.message);
@@ -7171,11 +8462,23 @@ async function muatDataSekolah() {
     setVal('ds-jam-masuk',    s.jam_masuk_global ? s.jam_masuk_global.slice(0,5) : '');
     setVal('ds-jam-pulang',   s.jam_pulang_global ? s.jam_pulang_global.slice(0,5) : '');
     setVal('ds-toleransi',    s.toleransi_terlambat_menit);
+    setVal('ds-logo-url',     s.logo_url);
 
     renderLogoPreview('ds-logo-kiri-preview',  s.logo_kiri);
     renderLogoPreview('ds-logo-kanan-preview', s.logo_kanan);
+    renderLogoUrlPreview(s.logo_url);
   } catch (e) {
     toast('Gagal memuat data sekolah: ' + e.message, 'error');
+  }
+}
+
+function renderLogoUrlPreview(url) {
+  const el = document.getElementById('ds-logo-app-preview');
+  if (!el) return;
+  if (url) {
+    el.innerHTML = `<img src="${escapeHTML(url)}" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentElement.innerHTML='<span class=\\'material-symbols-rounded\\' style=\\'font-size:28px;color:var(--danger-400);\\'>broken_image</span>';" />`;
+  } else {
+    el.innerHTML = `<span class="material-symbols-rounded" style="font-size:28px;color:var(--gray-400);">image</span>`;
   }
 }
 
@@ -7280,6 +8583,7 @@ async function simpanDataSekolah() {
     jam_masuk_global:  document.getElementById('ds-jam-masuk')?.value || null,
     jam_pulang_global: document.getElementById('ds-jam-pulang')?.value || null,
     toleransi_terlambat_menit: Number(document.getElementById('ds-toleransi')?.value) || 0,
+    logo_url: document.getElementById('ds-logo-url')?.value.trim() || null,
   };
 
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="material-symbols-rounded" style="animation:spin 1s linear infinite;">progress_activity</span> Menyimpan...'; }
@@ -7290,9 +8594,13 @@ async function simpanDataSekolah() {
     toast('Gagal menyimpan: ' + error.message, 'error');
   } else {
     APP.sekolah = { ...APP.sekolah, ...payload };
-    setText('login-school-name', payload.nama_sekolah || 'PresensiGuru');
-    setText('header-school-name', payload.nama_sekolah || 'PresensiGuru');
+    setText('login-school-name', payload.nama_sekolah || 'Sistem Presensi Digital');
+    setText('header-school-name', payload.nama_sekolah || 'Sistem Presensi Digital');
     updateStatusLokasiUI();
+
+    // Update logo di halaman login DAN semua header halaman, tanpa reload
+    terapkanLogoAplikasi(payload.logo_url);
+
     toast('✅ Data sekolah berhasil disimpan', 'success');
   }
 
@@ -7428,6 +8736,9 @@ function initDataSekolahDanHariKerja() {
   });
   document.getElementById('input-logo-kanan')?.addEventListener('change', e => {
     if (e.target.files?.[0]) uploadLogoSekolah(e.target.files[0], 'kanan');
+  });
+  document.getElementById('ds-logo-url')?.addEventListener('blur', e => {
+    renderLogoUrlPreview(e.target.value.trim());
   });
 
   document.getElementById('btn-tambah-libur')?.addEventListener('click', () => {
