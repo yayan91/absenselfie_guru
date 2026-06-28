@@ -1256,6 +1256,39 @@
     .izin-card-status.pending  { background: var(--warning-50); color: var(--warning-600); }
     .izin-card-status.approved { background: var(--success-50); color: var(--success-600); }
     .izin-card-status.rejected { background: var(--danger-50);  color: var(--danger-600);  }
+    .izin-card-lampiran {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary-600);
+      margin-top: 6px;
+      text-decoration: none;
+    }
+    .izin-card-lampiran .material-symbols-rounded { font-size: 15px; }
+    .izin-card-alasan-tolak {
+      background: var(--danger-50);
+      border-radius: var(--radius-md);
+      padding: 8px 10px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--danger-600);
+    }
+    .izin-card-alasan-tolak b { color: var(--gray-800); }
+    .izin-card-hapus {
+      background: none;
+      border: none;
+      color: var(--gray-400);
+      cursor: pointer;
+      width: 28px; height: 28px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      align-self: flex-start;
+    }
+    .izin-card-hapus:active { background: var(--gray-100); color: var(--danger-500); }
+    .izin-card-hapus .material-symbols-rounded { font-size: 18px; }
 
     /* ============================================================
        HALAMAN PROFIL
@@ -1467,6 +1500,49 @@
 
     .kelola-izin-card-body { padding: 12px 14px; }
     .kelola-izin-ket { font-size: 13px; color: var(--gray-600); }
+    .kelola-izin-lampiran {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary-600);
+      margin-top: 8px;
+      text-decoration: none;
+    }
+    .kelola-izin-lampiran .material-symbols-rounded { font-size: 15px; }
+    .kelola-izin-status-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .kelola-izin-status-info.approved { background: var(--success-50); color: var(--success-600); }
+    .kelola-izin-status-info.rejected { background: var(--danger-50);  color: var(--danger-600);  }
+    .kelola-izin-status-info .material-symbols-rounded { font-size: 16px; }
+    .kelola-izin-alasan-tolak {
+      background: var(--danger-50);
+      border-radius: var(--radius-md);
+      padding: 8px 10px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--danger-600);
+    }
+    .kelola-izin-alasan-tolak b { color: var(--gray-800); }
+    .kelola-izin-card-hapus {
+      background: none;
+      border: none;
+      color: var(--gray-400);
+      cursor: pointer;
+      width: 30px; height: 30px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .kelola-izin-card-hapus:active { background: var(--gray-100); color: var(--danger-500); }
+    .kelola-izin-card-hapus .material-symbols-rounded { font-size: 18px; }
 
     .kelola-izin-card-actions {
       display: flex;
@@ -1736,6 +1812,36 @@
       box-shadow: 0 2px 8px rgba(21, 101, 192, 0.35);
     }
     .chat-send-btn .material-symbols-rounded { font-size: 22px; }
+
+    /* ============================================================
+       MODAL OBROLAN BARU — daftar kontak
+    ============================================================ */
+    .ob-kontak-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 4px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+    }
+    .ob-kontak-item:active { background: var(--gray-50); }
+    .ob-kontak-info { flex: 1; overflow: hidden; }
+    .ob-kontak-nama { font-size: 14px; font-weight: 600; color: var(--gray-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ob-kontak-role { font-size: 11px; color: var(--gray-500); }
+    .ob-kontak-check {
+      width: 22px; height: 22px;
+      border-radius: var(--radius-full);
+      border: 2px solid var(--gray-300);
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .ob-kontak-check.checked {
+      background: var(--primary-600);
+      border-color: var(--primary-600);
+    }
+    .ob-kontak-check.checked .material-symbols-rounded { font-size: 14px; color: #fff; }
+    .ob-kontak-item.radio .ob-kontak-check { border-radius: var(--radius-sm); }
 
     /* ============================================================
        HALAMAN SOSMED
@@ -2505,11 +2611,12 @@
 
           <div class="form-card">
             <div class="form-card-title">Lampiran (Opsional)</div>
-            <div class="upload-area" id="izin-upload">
+            <div class="upload-area" id="izin-upload" style="cursor:pointer;">
               <span class="material-symbols-rounded">upload_file</span>
-              <p>Surat dokter / surat keterangan</p>
+              <p id="izin-upload-label">Surat dokter / surat keterangan</p>
               <span>JPG, PNG, atau PDF · Maks 5MB</span>
             </div>
+            <input type="file" id="izin-file-input" accept="image/jpeg,image/png,application/pdf" style="display:none;" />
           </div>
 
           <button class="btn-primary" id="btn-kirim-izin">
@@ -2655,6 +2762,11 @@
         <div class="header-title">Obrolan</div>
         <div class="header-subtitle" id="chat-subtitle">0 percakapan aktif</div>
       </div>
+      <div class="header-actions">
+        <button class="header-btn" id="btn-obrolan-baru" title="Obrolan baru">
+          <span class="material-symbols-rounded">add_comment</span>
+        </button>
+      </div>
     </div>
 
     <div class="page-content" style="padding-bottom:var(--nav-height);">
@@ -2692,6 +2804,58 @@
       <button class="chat-send-btn" id="btn-send-chat">
         <span class="material-symbols-rounded">send</span>
       </button>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       MODAL: OBROLAN BARU (personal / grup)
+  ================================================================ -->
+  <div class="modal-overlay" id="modal-obrolan-baru">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div class="modal-title">Obrolan Baru</div>
+        <button class="modal-close" id="close-modal-obrolan-baru">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Tab pilih jenis -->
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <button type="button" class="ob-tab active" data-mode="personal" style="flex:1;padding:10px;border-radius:var(--radius-md);border:1.5px solid var(--primary-600);background:var(--primary-600);color:#fff;font-weight:600;font-size:13px;cursor:pointer;">
+            Personal
+          </button>
+          <button type="button" class="ob-tab" data-mode="grup" style="flex:1;padding:10px;border-radius:var(--radius-md);border:1.5px solid var(--gray-200);background:#fff;color:var(--gray-700);font-weight:600;font-size:13px;cursor:pointer;">
+            Grup
+          </button>
+        </div>
+
+        <!-- Nama grup (muncul hanya saat mode grup) -->
+        <div class="form-group hidden" id="ob-nama-grup-wrap" style="margin-bottom:12px;">
+          <label class="form-label">Nama Grup</label>
+          <div class="input-wrap">
+            <span class="material-symbols-rounded input-icon">groups</span>
+            <input type="text" id="ob-nama-grup" placeholder="Contoh: Guru Kelas 6" />
+          </div>
+        </div>
+
+        <!-- Cari kontak -->
+        <div class="input-wrap" style="margin-bottom:10px;">
+          <span class="material-symbols-rounded input-icon">search</span>
+          <input type="text" id="ob-cari-kontak" placeholder="Cari nama guru/pegawai..." />
+        </div>
+
+        <div id="ob-hint-pilih" style="font-size:12px;color:var(--gray-500);margin-bottom:6px;">Pilih 1 orang untuk mulai obrolan</div>
+
+        <!-- Daftar kontak (checkbox) -->
+        <div id="ob-daftar-kontak" style="max-height:320px;overflow-y:auto;">
+          <!-- diisi otomatis oleh app.js (muatDaftarKontakObrolan) -->
+        </div>
+
+        <button class="btn-primary" id="btn-mulai-obrolan" style="margin-top:14px;" disabled>
+          <span class="material-symbols-rounded">send</span> Mulai Obrolan
+        </button>
+      </div>
     </div>
   </div>
 
@@ -2789,6 +2953,417 @@
       </div>
     </div>
   </div>
+  
+  <!-- ================================================================
+     PAGE: LAPORAN
+	================================================================ -->
+	<div class="page" id="page-laporan">
+	  <div class="app-header">
+		<button class="header-back-btn visible" id="btn-back-laporan">
+		  <span class="material-symbols-rounded">arrow_back</span>
+		</button>
+		<div class="header-title-group">
+		  <div class="header-title">Laporan</div>
+		  <div class="header-subtitle" id="laporan-subtitle">Rekap kehadiran</div>
+		</div>
+		<div class="header-actions">
+		  <button class="header-btn" id="btn-export-laporan" title="Export CSV">
+			<span class="material-symbols-rounded">download</span>
+		  </button>
+		</div>
+	  </div>
+	  <div class="page-content" style="padding-bottom:16px;">
+	 
+		<!-- Filter bulan & tahun -->
+		<div style="padding:12px 16px;display:flex;gap:8px;">
+		  <select id="laporan-bulan" style="flex:1;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:13px;font-family:var(--font-main);background:var(--gray-50);outline:none;">
+			<option value="1">Januari</option><option value="2">Februari</option>
+			<option value="3">Maret</option><option value="4">April</option>
+			<option value="5">Mei</option><option value="6">Juni</option>
+			<option value="7">Juli</option><option value="8">Agustus</option>
+			<option value="9">September</option><option value="10">Oktober</option>
+			<option value="11">November</option><option value="12">Desember</option>
+		  </select>
+		  <select id="laporan-tahun" style="width:90px;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:13px;font-family:var(--font-main);background:var(--gray-50);outline:none;"></select>
+		  <button id="btn-laporan-filter" class="btn-primary" style="width:auto;padding:10px 16px;font-size:13px;white-space:nowrap;">
+			<span class="material-symbols-rounded" style="font-size:18px;">search</span>
+		  </button>
+		</div>
+	 
+		<!-- Tab: Rekap / Izin / Detail -->
+		<div style="display:flex;gap:4px;padding:0 16px 8px;">
+		  <button class="laporan-tab active" data-tab="rekap" style="flex:1;padding:8px 4px;border:none;background:var(--primary-600);color:#fff;border-radius:var(--radius-md);font-size:12px;font-weight:600;font-family:var(--font-main);cursor:pointer;">Rekap</button>
+		  <button class="laporan-tab" data-tab="izin" style="flex:1;padding:8px 4px;border:none;background:var(--gray-200);color:var(--gray-700);border-radius:var(--radius-md);font-size:12px;font-weight:600;font-family:var(--font-main);cursor:pointer;">Izin</button>
+		</div>
+	 
+		<!-- Konten laporan -->
+		<div id="laporan-content">
+		  <div class="empty-state"><div class="empty-state-icon"><span class="material-symbols-rounded">bar_chart</span></div><div class="empty-state-title">Pilih bulan lalu klik 🔍</div></div>
+		</div>
+	 
+	  </div>
+	</div>
+	 
+	<!-- ================================================================
+		 PAGE: KELOLA GURU
+	================================================================ -->
+	<div class="page" id="page-kelola-guru">
+	  <div class="app-header">
+		<button class="header-back-btn visible" id="btn-back-kelola-guru">
+		  <span class="material-symbols-rounded">arrow_back</span>
+		</button>
+		<div class="header-title-group">
+		  <div class="header-title">Kelola Guru</div>
+		  <div class="header-subtitle" id="kelola-guru-subtitle">Memuat data...</div>
+		</div>
+	  </div>
+	  <div class="page-content" style="padding-bottom:16px;">
+	 
+		<!-- Search -->
+		<div style="padding:12px 16px;">
+		  <div class="input-wrap">
+			<span class="material-symbols-rounded input-icon">search</span>
+			<input type="text" id="kelola-guru-search" placeholder="Cari nama / NIP / mapel..."
+			  style="width:100%;padding:10px 10px 10px 38px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:13px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+		  </div>
+		</div>
+	 
+		<!-- Filter role -->
+		<div class="admin-filter-bar" id="kelola-guru-filter-role" style="padding:0 16px 8px;gap:6px;">
+		  <button class="filter-chip active" data-role="" type="button">Semua</button>
+		  <button class="filter-chip" data-role="guru" type="button">Guru</button>
+		  <button class="filter-chip" data-role="pegawai" type="button">Pegawai</button>
+		  <button class="filter-chip" data-role="kepsek" type="button">Kepsek</button>
+		  <button class="filter-chip" data-role="admin" type="button">Admin</button>
+		</div>
+	 
+		<!-- Daftar guru -->
+		<div id="kelola-guru-list">
+		  <!-- diisi JS -->
+		</div>
+	 
+	  </div>
+	</div>
+	 
+	<!-- ================================================================
+		 PAGE: KELOLA AKUN
+	================================================================ -->
+	<div class="page" id="page-kelola-akun">
+	  <div class="app-header">
+		<button class="header-back-btn visible" id="btn-back-kelola-akun">
+		  <span class="material-symbols-rounded">arrow_back</span>
+		</button>
+		<div class="header-title-group">
+		  <div class="header-title">Kelola Akun</div>
+		  <div class="header-subtitle">Edit email & password guru</div>
+		</div>
+	  </div>
+	  <div class="page-content" style="padding-bottom:16px;">
+	 
+		<!-- Search -->
+		<div style="padding:12px 16px;">
+		  <div class="input-wrap">
+			<span class="material-symbols-rounded input-icon">search</span>
+			<input type="text" id="kelola-akun-search" placeholder="Cari nama guru..."
+			  style="width:100%;padding:10px 10px 10px 38px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:13px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+		  </div>
+		</div>
+	 
+		<div id="kelola-akun-list">
+		  <!-- diisi JS -->
+		</div>
+	 
+	  </div>
+	</div>
+	 
+	<!-- ================================================================
+		 PAGE: DATA SEKOLAH (Admin)
+	================================================================ -->
+	<div class="page" id="page-data-sekolah">
+	  <div class="app-header">
+		<button class="header-back-btn visible" id="btn-back-data-sekolah">
+		  <span class="material-symbols-rounded">arrow_back</span>
+		</button>
+		<div class="header-title-group">
+		  <div class="header-title">Data Sekolah</div>
+		  <div class="header-subtitle">Identitas, koordinat & radius absen</div>
+		</div>
+	  </div>
+	  <div class="page-content" style="padding:16px;">
+
+		<!-- Logo kiri & kanan -->
+		<div class="section-header" style="padding:0 0 10px;">
+		  <span class="section-title">Logo Sekolah</span>
+		</div>
+		<div style="display:flex;gap:12px;margin-bottom:20px;">
+		  <div style="flex:1;text-align:center;">
+			<div id="ds-logo-kiri-preview" style="width:100%;aspect-ratio:1;border-radius:var(--radius-lg);background:var(--gray-100);border:1.5px dashed var(--gray-300);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;">
+			  <span class="material-symbols-rounded" style="font-size:32px;color:var(--gray-400);">image</span>
+			</div>
+			<button class="btn-tolak" id="btn-upload-logo-kiri" type="button" style="width:100%;font-size:12px;padding:8px;">
+			  <span class="material-symbols-rounded" style="font-size:16px;">upload</span> Logo Kiri
+			</button>
+			<input type="file" id="input-logo-kiri" accept="image/*" style="display:none;" />
+		  </div>
+		  <div style="flex:1;text-align:center;">
+			<div id="ds-logo-kanan-preview" style="width:100%;aspect-ratio:1;border-radius:var(--radius-lg);background:var(--gray-100);border:1.5px dashed var(--gray-300);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;">
+			  <span class="material-symbols-rounded" style="font-size:32px;color:var(--gray-400);">image</span>
+			</div>
+			<button class="btn-tolak" id="btn-upload-logo-kanan" type="button" style="width:100%;font-size:12px;padding:8px;">
+			  <span class="material-symbols-rounded" style="font-size:16px;">upload</span> Logo Kanan
+			</button>
+			<input type="file" id="input-logo-kanan" accept="image/*" style="display:none;" />
+		  </div>
+		</div>
+
+		<!-- Identitas -->
+		<div class="section-header" style="padding:0 0 10px;">
+		  <span class="section-title">Identitas Sekolah</span>
+		</div>
+		<div class="form-group">
+		  <label class="form-label">Pemerintah</label>
+		  <input type="text" id="ds-pemerintah" placeholder="Contoh: Pemerintah Kabupaten Bekasi"
+			style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+		</div>
+		<div class="form-group">
+		  <label class="form-label">Instansi / Dinas</label>
+		  <input type="text" id="ds-instansi" placeholder="Contoh: Dinas Pendidikan"
+			style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+		</div>
+		<div class="form-group">
+		  <label class="form-label">Nama Sekolah</label>
+		  <input type="text" id="ds-nama-sekolah" placeholder="Contoh: SD Negeri 1 Sukamaju"
+			style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+		</div>
+		<div class="form-group">
+		  <label class="form-label">NPSN</label>
+		  <input type="text" id="ds-npsn" placeholder="Contoh: 20123456"
+			style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+		</div>
+		<div class="form-group">
+		  <label class="form-label">Alamat</label>
+		  <textarea id="ds-alamat" rows="2" placeholder="Alamat lengkap sekolah..."
+			style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;resize:vertical;"></textarea>
+		</div>
+
+		<!-- Koordinat & Radius -->
+		<div class="section-header" style="padding:12px 0 10px;">
+		  <span class="section-title">Koordinat GPS &amp; Radius Absen</span>
+		</div>
+		<div style="background:var(--info-50);border-radius:var(--radius-md);padding:10px 12px;margin-bottom:14px;display:flex;gap:8px;align-items:flex-start;">
+		  <span class="material-symbols-rounded" style="font-size:18px;color:var(--info-500);flex-shrink:0;">info</span>
+		  <div style="font-size:12px;color:var(--gray-700);line-height:1.5;">Titik koordinat ini menjadi acuan jarak absen guru. Berdirilah tepat di lokasi sekolah lalu tekan tombol di bawah untuk mengisi otomatis.</div>
+		</div>
+		<button class="btn-primary" id="btn-ambil-lokasi-sekolah" type="button" style="margin-bottom:14px;background:linear-gradient(135deg, var(--success-500), var(--success-600));box-shadow:0 4px 12px rgba(76,175,80,0.35);">
+		  <span class="material-symbols-rounded">my_location</span> Ambil Lokasi Saat Ini
+		</button>
+		<div style="display:flex;gap:10px;">
+		  <div class="form-group" style="flex:1;">
+			<label class="form-label">Latitude</label>
+			<input type="number" step="any" id="ds-lat" placeholder="-6.123456"
+			  style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+		  </div>
+		  <div class="form-group" style="flex:1;">
+			<label class="form-label">Longitude</label>
+			<input type="number" step="any" id="ds-lng" placeholder="107.123456"
+			  style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+		  </div>
+		</div>
+		<div class="form-group">
+		  <label class="form-label">Radius Toleransi Absen (meter)</label>
+		  <input type="number" min="10" step="1" id="ds-radius" placeholder="50"
+			style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+		  <div style="font-size:11px;color:var(--gray-500);margin-top:6px;">Guru di luar radius ini akan tercatat berstatus "Luar Radius" saat absen.</div>
+		</div>
+
+		<!-- Jam & Toleransi -->
+		<div class="section-header" style="padding:12px 0 10px;">
+		  <span class="section-title">Jam Kerja Global</span>
+		</div>
+		<div style="display:flex;gap:10px;">
+		  <div class="form-group" style="flex:1;">
+			<label class="form-label">Jam Masuk</label>
+			<input type="time" id="ds-jam-masuk"
+			  style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+		  </div>
+		  <div class="form-group" style="flex:1;">
+			<label class="form-label">Jam Pulang</label>
+			<input type="time" id="ds-jam-pulang"
+			  style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+		  </div>
+		</div>
+		<div class="form-group">
+		  <label class="form-label">Toleransi Terlambat (menit)</label>
+		  <input type="number" min="0" step="1" id="ds-toleransi" placeholder="15"
+			style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+		</div>
+
+		<button class="btn-primary" id="btn-simpan-data-sekolah" type="button" style="margin-top:8px;">
+		  <span class="material-symbols-rounded">save</span> Simpan Data Sekolah
+		</button>
+		<div style="height:24px;"></div>
+	  </div>
+	</div>
+
+	<!-- ================================================================
+		 PAGE: KONFIGURASI HARI KERJA (Admin)
+	================================================================ -->
+	<div class="page" id="page-hari-kerja">
+	  <div class="app-header">
+		<button class="header-back-btn visible" id="btn-back-hari-kerja">
+		  <span class="material-symbols-rounded">arrow_back</span>
+		</button>
+		<div class="header-title-group">
+		  <div class="header-title">Konfigurasi Hari Kerja</div>
+		  <div class="header-subtitle">Atur hari aktif &amp; hari libur</div>
+		</div>
+	  </div>
+	  <div class="page-content" style="padding:16px;">
+
+		<div class="section-header" style="padding:0 0 10px;">
+		  <span class="section-title">Hari Aktif Sekolah</span>
+		</div>
+		<div style="font-size:12px;color:var(--gray-500);margin-bottom:12px;">Hari yang dinonaktifkan tidak akan dihitung sebagai hari kerja pada rekap kehadiran.</div>
+		<div id="hk-daftar-hari" style="background:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow-xs);overflow:hidden;margin-bottom:24px;">
+		  <!-- diisi JS: 7 baris toggle hari -->
+		</div>
+
+		<div class="section-header" style="padding:0 0 10px;display:flex;justify-content:space-between;align-items:center;">
+		  <span class="section-title">Hari Libur / Tanggal Merah</span>
+		  <button id="btn-tambah-libur" type="button" style="background:var(--primary-50);border:none;color:var(--primary-700);font-weight:700;font-size:12px;padding:6px 12px;border-radius:var(--radius-full);cursor:pointer;display:flex;align-items:center;gap:4px;">
+			<span class="material-symbols-rounded" style="font-size:16px;">add</span> Tambah
+		  </button>
+		</div>
+		<div id="hk-daftar-libur">
+		  <!-- diisi JS: daftar hari libur -->
+		</div>
+		<div style="height:24px;"></div>
+	  </div>
+	</div>
+
+	<!-- MODAL: TAMBAH HARI LIBUR -->
+	<div class="modal-overlay" id="modal-tambah-libur">
+	  <div class="modal-sheet">
+		<div class="modal-handle"></div>
+		<div class="modal-header">
+		  <div class="modal-title">Tambah Hari Libur</div>
+		  <button class="modal-close" id="close-modal-tambah-libur"><span class="material-symbols-rounded">close</span></button>
+		</div>
+		<div class="modal-body">
+		  <div class="form-group">
+			<label class="form-label">Tanggal</label>
+			<input type="date" id="libur-tanggal"
+			  style="width:100%;padding:12px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+		  </div>
+		  <div class="form-group">
+			<label class="form-label">Keterangan</label>
+			<input type="text" id="libur-keterangan" placeholder="Contoh: Libur Hari Raya Idul Fitri"
+			  style="width:100%;padding:12px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+		  </div>
+		  <button class="btn-primary" id="btn-simpan-libur" type="button">
+			<span class="material-symbols-rounded">save</span> Simpan
+		  </button>
+		</div>
+	  </div>
+	</div>
+	 
+	<!-- Modal edit profil guru (shared untuk Kelola Guru) -->
+	<div class="modal-overlay" id="modal-edit-guru">
+	  <div class="modal-sheet" style="max-height:85dvh;overflow-y:auto;">
+		<div class="modal-handle"></div>
+		<div class="modal-header">
+		  <div class="modal-title" id="modal-edit-guru-title">Edit Data Guru</div>
+		  <button class="modal-close" id="close-modal-edit-guru"><span class="material-symbols-rounded">close</span></button>
+		</div>
+		<div class="modal-body" id="modal-edit-guru-body">
+		  <!-- diisi JS -->
+		</div>
+	  </div>
+	</div>
+	 
+	<!-- Modal edit akun (email/password) -->
+	<div class="modal-overlay" id="modal-edit-akun">
+	  <div class="modal-sheet">
+		<div class="modal-handle"></div>
+		<div class="modal-header">
+		  <div class="modal-title" id="modal-edit-akun-title">Edit Akun</div>
+		  <button class="modal-close" id="close-modal-edit-akun"><span class="material-symbols-rounded">close</span></button>
+		</div>
+		<div class="modal-body">
+		  <div class="form-group">
+			<label class="form-label">Email Baru</label>
+			<div class="input-wrap">
+			  <span class="material-symbols-rounded input-icon">email</span>
+			  <input type="email" id="akun-new-email" placeholder="email@baru.com"
+				style="width:100%;padding:12px 12px 12px 40px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+			</div>
+		  </div>
+		  <div class="form-group">
+			<label class="form-label">Password Baru <span style="color:var(--gray-400);font-weight:400;">(kosongkan jika tidak ganti)</span></label>
+			<div class="input-wrap">
+			  <span class="material-symbols-rounded input-icon">lock</span>
+			  <input type="password" id="akun-new-password" placeholder="Password baru..."
+				style="width:100%;padding:12px 12px 12px 40px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+			</div>
+		  </div>
+		  <input type="hidden" id="akun-target-user-id" />
+		  <button class="btn-primary" id="btn-simpan-akun" type="button">
+			<span class="material-symbols-rounded">save</span> Simpan Perubahan
+		  </button>
+		</div>
+	  </div>
+	</div>
+	
+	<!-- MODAL: EDIT DATA GURU -->
+	<div class="modal-overlay" id="modal-edit-guru">
+	  <div class="modal-sheet" style="max-height:85dvh;overflow-y:auto;">
+		<div class="modal-handle"></div>
+		<div class="modal-header">
+		  <div class="modal-title" id="modal-edit-guru-title">Edit Data</div>
+		  <button class="modal-close" id="close-modal-edit-guru">
+			<span class="material-symbols-rounded">close</span>
+		  </button>
+		</div>
+		<div class="modal-body" id="modal-edit-guru-body">
+		  <!-- diisi JS -->
+		</div>
+	  </div>
+	</div>
+	 
+	<!-- MODAL: EDIT AKUN (email & password) -->
+	<div class="modal-overlay" id="modal-edit-akun">
+	  <div class="modal-sheet">
+		<div class="modal-handle"></div>
+		<div class="modal-header">
+		  <div class="modal-title" id="modal-edit-akun-title">Edit Akun</div>
+		  <button class="modal-close" id="close-modal-edit-akun">
+			<span class="material-symbols-rounded">close</span>
+		  </button>
+		</div>
+		<div class="modal-body">
+		  <div class="form-group">
+			<label class="form-label">Email Baru</label>
+			<div class="input-wrap">
+			  <span class="material-symbols-rounded input-icon">email</span>
+			  <input type="email" id="akun-new-email" placeholder="email@baru.com" />
+			</div>
+		  </div>
+		  <div class="form-group" style="margin-top:12px;">
+			<label class="form-label">Password Baru
+			  <span style="color:var(--gray-400);font-weight:400;"> (kosongkan jika tidak ganti)</span>
+			</label>
+			<div class="input-wrap">
+			  <span class="material-symbols-rounded input-icon">lock</span>
+			  <input type="password" id="akun-new-password" placeholder="Password baru..." />
+			</div>
+		  </div>
+		  <input type="hidden" id="akun-target-user-id" />
+		  <button class="btn-primary" id="btn-simpan-akun" type="button" style="margin-top:16px;">
+			<span class="material-symbols-rounded">save</span> Simpan Perubahan
+		  </button>
+		</div>
+	  </div>
+	</div>
 
   <!-- ================================================================
        BOTTOM NAVIGATION (tampil di halaman utama)
@@ -2841,6 +3416,36 @@
           <button class="btn-tolak" id="btn-batal-logout" style="flex:1;">Batal</button>
           <button class="btn-primary" id="btn-konfirm-logout" style="flex:2;">
             <span class="material-symbols-rounded">logout</span> Keluar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       MODAL: TOLAK IZIN (wajib isi alasan)
+  ================================================================ -->
+  <div class="modal-overlay" id="modal-tolak-izin">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div class="modal-title">Tolak Permohonan</div>
+        <button class="modal-close" id="close-modal-tolak-izin">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="tolak-izin-id" />
+        <div class="form-group">
+          <label class="form-label">Alasan Penolakan</label>
+          <div class="input-wrap">
+            <textarea id="tolak-izin-alasan" placeholder="Jelaskan alasan permohonan ini ditolak..." style="height:100px;"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <button class="btn-tolak" id="btn-batal-tolak-izin" style="flex:1;" type="button">Batal</button>
+          <button class="btn-primary" id="btn-konfirm-tolak-izin" style="flex:2;" type="button">
+            <span class="material-symbols-rounded">close</span> Tolak Permohonan
           </button>
         </div>
       </div>
@@ -2989,6 +3594,7 @@
 		</div>
 	  </div>
 	</div>
+	
 
 </div><!-- #app -->
 
@@ -3033,8 +3639,8 @@
 /* ============================================================
    0. KONFIGURASI SUPABASE
    ============================================================ */
-const SUPABASE_URL  = 'https://tbrrpczdrzhuoyrmfqpt.supabase.co';
-const SUPABASE_ANON = 'sb_publishable_rHbT1pHYVdsaRSbYwNDpIw_ZKKFtX1W';
+const SUPABASE_URL  = 'https://indosdzwycoavznvyzkl.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_I6XQ0ta6b97XDMib_kNrvw_sFGs_BO1';
 
 // Inisialisasi client Supabase (menggunakan CDN global window.supabase)
 const { createClient } = window.supabase;
@@ -3562,7 +4168,8 @@ function updateStatusLokasiUI() {
     APP.sekolah.lat_sekolah, APP.sekolah.lng_sekolah,
     APP.koordinatSaatIni.lat, APP.koordinatSaatIni.lng
   );
-  const diLokasi = jarak <= 50;
+  const batasRadius = Number(APP.sekolah.radius_meter) || 50;
+  const diLokasi = jarak <= batasRadius;
   const jarakTeks = jarak < 1000 ? `${Math.round(jarak)} meter` : `${(jarak / 1000).toFixed(1)} km`;
 
   // Update UI absen masuk
@@ -3599,7 +4206,7 @@ async function renderBeranda() {
   setText('hero-name', p.nama || p.username || 'Guru');
   setText('profil-nama', p.nama || '-');
   setText('profil-nip', 'NIP: ' + (p.nip || '-'));
-  setText('profil-role', p.role === 'admin' ? 'Admin' : p.role === 'kepsek' ? 'Kepala Sekolah' : 'Guru');
+  setText('profil-role', p.role === 'admin' ? 'Admin' : p.role === 'kepsek' ? 'Kepala Sekolah' : p.role === 'pegawai' ? 'Pegawai' : 'Guru');
   setText('profil-pangkat', p.pangkat || '-');
   setText('profil-mapel', p.mapel || '-');
   setText('profil-kelamin', p.kelamin === 'L' ? 'Laki-laki' : p.kelamin === 'P' ? 'Perempuan' : '-');
@@ -4250,6 +4857,12 @@ function initTabIzinListeners() {
 
   // Kirim permohonan
   document.getElementById('btn-kirim-izin')?.addEventListener('click', kirimIzin);
+
+  // Lampiran izin: klik area → buka file picker, lalu tampilkan nama file terpilih
+  document.getElementById('izin-upload')?.addEventListener('click', () => document.getElementById('izin-file-input')?.click());
+  document.getElementById('izin-file-input')?.addEventListener('change', function() {
+    setText('izin-upload-label', this.files?.[0]?.name || 'Surat dokter / surat keterangan');
+  });
 }
 
 function resetFormIzin() {
@@ -4259,6 +4872,11 @@ function resetFormIzin() {
   const sampaiEl = document.getElementById('izin-sampai');
   if (dariEl)   dariEl.value   = hari;
   if (sampaiEl) sampaiEl.value = hari;
+
+  // Reset pilihan lampiran
+  const fileInput = document.getElementById('izin-file-input');
+  if (fileInput) fileInput.value = '';
+  setText('izin-upload-label', 'Surat dokter / surat keterangan');
 }
 
 async function kirimIzin() {
@@ -4274,13 +4892,56 @@ async function kirimIzin() {
   btn.disabled = true;
   btn.innerHTML = '<span class="material-symbols-rounded">hourglass_top</span> Mengirim...';
 
+  // Upload lampiran ke Google Drive jika ada — WAJIB BERHASIL kalau user memilih file
+  let lampiranId = null;
+  const fileInput   = document.getElementById('izin-file-input');
+  const adaLampiran = fileInput?.files?.length > 0;
+
+  if (adaLampiran) {
+    const file = fileInput.files[0];
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast('Ukuran file maksimal 5MB', 'warning');
+      btn.disabled = false;
+      btn.innerHTML = '<span class="material-symbols-rounded">send</span> Kirim Permohonan';
+      return;
+    }
+
+    try {
+      btn.innerHTML = '<span class="material-symbols-rounded">hourglass_top</span> Mengupload lampiran...';
+
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload  = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const isPDF        = file.type === 'application/pdf';
+      const base64Final  = isPDF ? base64 : await kompresFotoJikaPerlu(base64);
+      const namaFile      = `izin_${APP.user.id}_${Date.now()}.${isPDF ? 'pdf' : 'jpg'}`;
+
+      lampiranId = await uploadFotoKeGoogleDrive(base64Final, namaFile, 'izin');
+      if (!lampiranId) throw new Error('Server tidak mengembalikan ID lampiran');
+    } catch (e) {
+      console.error('Upload lampiran izin gagal:', e.message);
+      toast('❌ Gagal mengirim — lampiran tidak berhasil diupload. Coba lagi.', 'error', 5000);
+      btn.disabled = false;
+      btn.innerHTML = '<span class="material-symbols-rounded">send</span> Kirim Permohonan';
+      return; // STOP — tidak lanjut insert ke Supabase
+    }
+  }
+
+  btn.innerHTML = '<span class="material-symbols-rounded">hourglass_top</span> Menyimpan...';
+
   const { error } = await sb.from('pengajuan_izin').insert({
-    guru_id        : APP.user.id,
-    jenis_izin     : jenis,
-    tanggal_mulai  : dari,
-    tanggal_selesai: sampai,
-    keterangan     : ket || null,
-    status_approval: 'Pending',
+    guru_id           : APP.user.id,
+    jenis_izin         : jenis,
+    tanggal_mulai      : dari,
+    tanggal_selesai    : sampai,
+    keterangan         : ket || null,
+    drive_lampiran_id  : lampiranId,
+    status_approval    : 'Pending',
   });
 
   btn.disabled = false;
@@ -4314,6 +4975,11 @@ async function muatRiwayatIzin() {
     return;
   }
 
+  if (!data || data.length === 0) {
+    container.innerHTML = `<div style="height:12px;"></div><div class="empty-state"><div class="empty-state-icon"><span class="material-symbols-rounded">event_note</span></div><div class="empty-state-title">Belum Ada Riwayat</div><div class="empty-state-sub">Permohonan izin/sakit Anda akan muncul di sini</div></div>`;
+    return;
+  }
+
   const statusMap = {
     'Pending'  : { cls: 'pending',  icon: 'schedule',      label: 'Menunggu' },
     'Disetujui': { cls: 'approved', icon: 'check_circle',  label: 'Disetujui' },
@@ -4330,7 +4996,7 @@ async function muatRiwayatIzin() {
       : `${new Date(item.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} – ${new Date(item.tanggal_selesai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
 
     return `
-      <div class="izin-card">
+      <div class="izin-card" data-izin-riwayat-id="${item.id}">
         <div class="izin-card-icon ${clsMap[item.jenis_izin] || 'izin'}">
           <span class="material-symbols-rounded">${iconMap[item.jenis_izin] || 'event_busy'}</span>
         </div>
@@ -4338,33 +5004,94 @@ async function muatRiwayatIzin() {
           <div class="izin-card-jenis">${escapeHTML(item.jenis_izin)}</div>
           <div class="izin-card-tanggal">${tglStr} · ${durasi} hari</div>
           ${item.keterangan ? `<div class="izin-card-ket">${escapeHTML(item.keterangan)}</div>` : ''}
+          ${item.drive_lampiran_id ? `<a href="https://drive.google.com/file/d/${item.drive_lampiran_id}/view" target="_blank" rel="noopener" class="izin-card-lampiran"><span class="material-symbols-rounded">attach_file</span> Lihat Lampiran</a>` : ''}
           <div class="izin-card-status ${st.cls}">
             <span class="material-symbols-rounded">${st.icon}</span> ${st.label}
           </div>
+          ${item.status_approval === 'Ditolak' && item.catatan_admin ? `<div class="izin-card-alasan-tolak"><b>Alasan ditolak:</b> ${escapeHTML(item.catatan_admin)}</div>` : ''}
         </div>
+        <button class="izin-card-hapus" data-id="${item.id}" title="Hapus riwayat ini">
+          <span class="material-symbols-rounded">delete</span>
+        </button>
       </div>`;
   }).join('');
 
   container.innerHTML = `<div style="height:12px;"></div><div class="izin-list">${html}</div><div style="height:16px;"></div>`;
+
+  container.querySelectorAll('.izin-card-hapus').forEach(btn => {
+    btn.addEventListener('click', () => hapusRiwayatIzin(btn.dataset.id, btn));
+  });
 }
 
-async function muatKelolaIzin() {
-  const { data, error } = await sb
-    .from('pengajuan_izin')
-    .select('*, profiles!pengajuan_izin_guru_id_fkey(nama, mapel)')
-    .eq('status_approval', 'Pending')
-    .order('created_at', { ascending: false });
+async function hapusRiwayatIzin(id, btn) {
+  if (!confirm('Hapus riwayat permohonan ini? Tindakan ini tidak dapat dibatalkan.')) return;
 
-  const container = document.getElementById('tab-content-kelola');
-  if (!container) return;
+  if (btn) btn.disabled = true;
+
+  const { error } = await sb.from('pengajuan_izin').delete().eq('id', id);
 
   if (error) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><span class="material-symbols-rounded">error</span></div><div class="empty-state-title">Gagal memuat data</div></div>`;
+    toast('Gagal menghapus: ' + error.message, 'error');
+    if (btn) btn.disabled = false;
     return;
   }
 
-  if (!data || data.length === 0) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><span class="material-symbols-rounded">task_alt</span></div><div class="empty-state-title">Tidak Ada Pengajuan</div><div class="empty-state-sub">Semua permohonan izin sudah ditangani</div></div>`;
+  toast('Riwayat berhasil dihapus', 'success');
+  document.querySelector(`[data-izin-riwayat-id="${id}"]`)?.remove();
+}
+
+let _kelolaIzinSemuaData = [];   // cache semua data izin (semua status) untuk admin/kepsek
+let _kelolaIzinFilterAktif = 'Pending';
+
+async function muatKelolaIzin() {
+  const container = document.getElementById('tab-content-kelola');
+  if (!container) return;
+  container.innerHTML = `<div class="empty-state"><div class="empty-state-sub">Memuat data izin...</div></div>`;
+
+  const { data, error } = await sb
+    .from('pengajuan_izin')
+    .select('*, profiles!pengajuan_izin_guru_id_fkey(nama, mapel), pemutus:profiles!pengajuan_izin_disetujui_oleh_fkey(nama)')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><span class="material-symbols-rounded">error</span></div><div class="empty-state-title">Gagal memuat data</div><div class="empty-state-sub">${escapeHTML(error.message)}</div></div>`;
+    return;
+  }
+
+  _kelolaIzinSemuaData = data || [];
+  renderKelolaIzinList();
+}
+
+function renderKelolaIzinList() {
+  const container = document.getElementById('tab-content-kelola');
+  if (!container) return;
+
+  const semua     = _kelolaIzinSemuaData;
+  const jumlah    = {
+    Pending  : semua.filter(d => d.status_approval === 'Pending').length,
+    Disetujui: semua.filter(d => d.status_approval === 'Disetujui').length,
+    Ditolak  : semua.filter(d => d.status_approval === 'Ditolak').length,
+  };
+  const data = _kelolaIzinFilterAktif === 'Semua'
+    ? semua
+    : semua.filter(d => d.status_approval === _kelolaIzinFilterAktif);
+
+  const filterTab = (key, icon, label, count) => `
+    <button class="filter-chip ${_kelolaIzinFilterAktif === key ? 'active' : ''}" type="button" data-filter="${key}">
+      <span class="material-symbols-rounded">${icon}</span> ${label}${count !== null ? ` (${count})` : ''}
+    </button>`;
+
+  const filterBar = `
+    <div class="admin-filter-bar">
+      ${filterTab('Pending', 'schedule', 'Menunggu', jumlah.Pending)}
+      ${filterTab('Disetujui', 'check_circle', 'Disetujui', jumlah.Disetujui)}
+      ${filterTab('Ditolak', 'cancel', 'Ditolak', jumlah.Ditolak)}
+      ${filterTab('Semua', 'list', 'Semua', semua.length)}
+    </div>`;
+
+  if (!data.length) {
+    container.innerHTML = `${filterBar}<div class="empty-state"><div class="empty-state-icon"><span class="material-symbols-rounded">task_alt</span></div><div class="empty-state-title">Tidak Ada Data</div><div class="empty-state-sub">Tidak ada permohonan pada kategori ini</div></div>`;
+    initFilterKelolaIzinListener();
     return;
   }
 
@@ -4374,6 +5101,32 @@ async function muatKelolaIzin() {
     const inisialGuru = inisial(nama);
     const durasi = Math.round((new Date(item.tanggal_selesai) - new Date(item.tanggal_mulai)) / 86400000) + 1;
     const tglStr = `${new Date(item.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}${item.tanggal_mulai !== item.tanggal_selesai ? ` – ${new Date(item.tanggal_selesai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}` : ''}`;
+    const lampiranHtml = item.drive_lampiran_id
+      ? `<a href="https://drive.google.com/file/d/${item.drive_lampiran_id}/view" target="_blank" rel="noopener" class="kelola-izin-lampiran"><span class="material-symbols-rounded">attach_file</span> Lihat Lampiran</a>`
+      : '';
+
+    let actionsHtml = '';
+    if (item.status_approval === 'Pending') {
+      actionsHtml = `
+        <div class="kelola-izin-card-actions">
+          <button class="btn-tolak" data-id="${item.id}" data-aksi="Ditolak" type="button">
+            <span class="material-symbols-rounded">close</span> Tolak
+          </button>
+          <button class="btn-setujui" data-id="${item.id}" data-aksi="Disetujui" type="button">
+            <span class="material-symbols-rounded">check</span> Setujui
+          </button>
+        </div>`;
+    } else if (item.status_approval === 'Disetujui') {
+      actionsHtml = `
+        <div class="kelola-izin-status-info approved">
+          <span class="material-symbols-rounded">check_circle</span> Disetujui oleh ${escapeHTML(item.pemutus?.nama || 'Admin')}
+        </div>`;
+    } else if (item.status_approval === 'Ditolak') {
+      actionsHtml = `
+        <div class="kelola-izin-status-info rejected">
+          <span class="material-symbols-rounded">cancel</span> Ditolak oleh ${escapeHTML(item.pemutus?.nama || 'Admin')}
+        </div>`;
+    }
 
     return `
       <div class="kelola-izin-card" data-izin-id="${item.id}">
@@ -4390,50 +5143,108 @@ async function muatKelolaIzin() {
               <span class="meta-chip">${durasi} hari</span>
             </div>
           </div>
-        </div>
-        ${item.keterangan ? `<div class="kelola-izin-card-body"><div class="kelola-izin-ket">${escapeHTML(item.keterangan)}</div></div>` : ''}
-        <div class="kelola-izin-card-actions">
-          <button class="btn-tolak" data-id="${item.id}" data-aksi="Ditolak" type="button">
-            <span class="material-symbols-rounded">close</span> Tolak
-          </button>
-          <button class="btn-setujui" data-id="${item.id}" data-aksi="Disetujui" type="button">
-            <span class="material-symbols-rounded">check</span> Setujui
+          <button class="kelola-izin-card-hapus" data-id="${item.id}" title="Hapus riwayat ini">
+            <span class="material-symbols-rounded">delete</span>
           </button>
         </div>
+        ${item.keterangan || lampiranHtml ? `<div class="kelola-izin-card-body">
+          ${item.keterangan ? `<div class="kelola-izin-ket">${escapeHTML(item.keterangan)}</div>` : ''}
+          ${lampiranHtml}
+          ${item.status_approval === 'Ditolak' && item.catatan_admin ? `<div class="kelola-izin-alasan-tolak"><b>Alasan ditolak:</b> ${escapeHTML(item.catatan_admin)}</div>` : ''}
+        </div>` : (item.status_approval === 'Ditolak' && item.catatan_admin ? `<div class="kelola-izin-card-body"><div class="kelola-izin-alasan-tolak"><b>Alasan ditolak:</b> ${escapeHTML(item.catatan_admin)}</div></div>` : '')}
+        ${actionsHtml}
       </div>`;
   }).join('');
 
-  container.innerHTML = `
-    <div class="admin-filter-bar">
-      <button class="filter-chip active" type="button"><span class="material-symbols-rounded">schedule</span> Menunggu (${data.length})</button>
-    </div>
-    <div style="height:4px;"></div>
-    <div class="kelola-izin-list" id="kelola-izin-list">${html}</div>
-    <div style="height:16px;"></div>`;
+  container.innerHTML = `${filterBar}<div style="height:4px;"></div><div class="kelola-izin-list" id="kelola-izin-list">${html}</div><div style="height:16px;"></div>`;
 
-  // Event listener tombol ACC/Tolak
-  container.querySelectorAll('.btn-tolak, .btn-setujui').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const id   = btn.dataset.id;
-      const aksi = btn.dataset.aksi;
-      container.querySelectorAll(`[data-id="${id}"]`).forEach(b => b.disabled = true);
+  initFilterKelolaIzinListener();
 
-      const { error } = await sb.from('pengajuan_izin').update({
-        status_approval: aksi,
-        disetujui_oleh: APP.user.id,
-      }).eq('id', id);
+  // Tombol Setujui — langsung jalan
+  container.querySelectorAll('.btn-setujui').forEach(btn => {
+    btn.addEventListener('click', () => prosesKeputusanIzin(btn.dataset.id, 'Disetujui'));
+  });
 
-      if (error) {
-        toast('Gagal memperbarui status', 'error');
-        container.querySelectorAll(`[data-id="${id}"]`).forEach(b => b.disabled = false);
-        return;
-      }
+  // Tombol Tolak — wajib isi alasan dulu
+  container.querySelectorAll('.btn-tolak').forEach(btn => {
+    btn.addEventListener('click', () => bukaModalTolakIzin(btn.dataset.id));
+  });
 
-      toast(aksi === 'Disetujui' ? '✅ Izin disetujui' : '❌ Izin ditolak', aksi === 'Disetujui' ? 'success' : 'warning');
-      btn.closest('.kelola-izin-card')?.remove();
-      muatBadgeMenuCepat();
+  // Tombol hapus (admin/kepsek)
+  container.querySelectorAll('.kelola-izin-card-hapus').forEach(btn => {
+    btn.addEventListener('click', () => hapusKelolaIzin(btn.dataset.id));
+  });
+}
+
+function initFilterKelolaIzinListener() {
+  document.querySelectorAll('#tab-content-kelola .filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      _kelolaIzinFilterAktif = chip.dataset.filter;
+      renderKelolaIzinList();
     });
   });
+}
+
+async function prosesKeputusanIzin(id, aksi, catatan = null) {
+  const card = document.querySelector(`.kelola-izin-card[data-izin-id="${id}"]`);
+  card?.querySelectorAll('button').forEach(b => b.disabled = true);
+
+  const { error } = await sb.from('pengajuan_izin').update({
+    status_approval: aksi,
+    disetujui_oleh : APP.user.id,
+    catatan_admin  : catatan,
+  }).eq('id', id);
+
+  if (error) {
+    toast('Gagal memperbarui status: ' + error.message, 'error');
+    card?.querySelectorAll('button').forEach(b => b.disabled = false);
+    return;
+  }
+
+  toast(aksi === 'Disetujui' ? '✅ Izin disetujui' : '❌ Izin ditolak', aksi === 'Disetujui' ? 'success' : 'warning');
+
+  // Update cache lokal lalu render ulang supaya filter/badge ikut akurat
+  const idx = _kelolaIzinSemuaData.findIndex(d => d.id == id);
+  if (idx > -1) {
+    _kelolaIzinSemuaData[idx].status_approval = aksi;
+    _kelolaIzinSemuaData[idx].catatan_admin   = catatan;
+    _kelolaIzinSemuaData[idx].disetujui_oleh  = APP.user.id;
+    _kelolaIzinSemuaData[idx].pemutus         = { nama: APP.profile?.nama };
+  }
+  renderKelolaIzinList();
+  muatBadgeMenuCepat();
+}
+
+function bukaModalTolakIzin(id) {
+  document.getElementById('tolak-izin-id').value = id;
+  document.getElementById('tolak-izin-alasan').value = '';
+  bukaModal('modal-tolak-izin');
+}
+
+async function konfirmasiTolakIzin() {
+  const id     = document.getElementById('tolak-izin-id')?.value;
+  const alasan = document.getElementById('tolak-izin-alasan')?.value.trim();
+
+  if (!alasan) { toast('Alasan penolakan wajib diisi', 'warning'); return; }
+
+  tutupModal('modal-tolak-izin');
+  await prosesKeputusanIzin(id, 'Ditolak', alasan);
+}
+
+async function hapusKelolaIzin(id) {
+  if (!confirm('Hapus riwayat permohonan ini secara permanen?')) return;
+
+  const { error } = await sb.from('pengajuan_izin').delete().eq('id', id);
+
+  if (error) {
+    toast('Gagal menghapus: ' + error.message, 'error');
+    return;
+  }
+
+  toast('Riwayat berhasil dihapus', 'success');
+  _kelolaIzinSemuaData = _kelolaIzinSemuaData.filter(d => d.id != id);
+  renderKelolaIzinList();
+  muatBadgeMenuCepat();
 }
 
 /* ============================================================
@@ -5243,8 +6054,27 @@ async function muatChatList() {
 
   if (subtitle) subtitle.textContent = `${participantData.length} percakapan aktif`;
 
-  // Untuk setiap room, ambil pesan terakhir
   const roomIds = participantData.map(p => p.room_id);
+
+  // Untuk room personal (bukan grup), nama yang ditampilkan adalah nama LAWAN bicara,
+  // jadi perlu ambil siapa saja anggota lain di setiap room personal.
+  const roomPersonalIds = participantData
+    .filter(p => p.chat_rooms && p.chat_rooms.is_group === false)
+    .map(p => p.room_id);
+
+  const namaLawanMap = {}; // room_id -> nama lawan
+  if (roomPersonalIds.length) {
+    const { data: anggotaLain } = await sb
+      .from('chat_participants')
+      .select('room_id, guru_id, profiles!guru_id(nama)')
+      .in('room_id', roomPersonalIds)
+      .neq('guru_id', APP.user.id);
+    (anggotaLain || []).forEach(a => {
+      namaLawanMap[a.room_id] = a.profiles?.nama || 'Pengguna';
+    });
+  }
+
+  // Untuk setiap room, ambil pesan terakhir
   const { data: lastMsgs } = await sb
     .from('chat_messages')
     .select('*, profiles!pengirim_id(nama)')
@@ -5262,7 +6092,7 @@ async function muatChatList() {
     const room    = p.chat_rooms;
     if (!room) return '';
     const lastMsg = lastMsgMap[room.id];
-    const nama    = room.nama_grup || 'Grup';
+    const nama    = room.is_group ? (room.nama_grup || 'Grup') : (namaLawanMap[room.id] || 'Pengguna');
     const preview = lastMsg ? `${(lastMsg.profiles?.nama?.split(' ')[0]) || 'Seseorang'}: ${lastMsg.pesan}` : 'Belum ada pesan';
     const waktu   = lastMsg ? formatTimeAgo(new Date(lastMsg.created_at)) : '';
 
@@ -5399,6 +6229,210 @@ async function kirimPesanChat() {
   if (error) toast('Gagal kirim pesan', 'error');
 }
 
+/* ============================================================
+   18b. OBROLAN BARU — pilih kontak, buat chat personal / grup
+   ============================================================ */
+let _obSemuaKontak = [];     // semua profil selain diri sendiri
+let _obModeSaatIni = 'personal'; // 'personal' | 'grup'
+let _obTerpilih    = [];     // array id profil yang dicentang
+
+function bukaModalObrolanBaru() {
+  _obModeSaatIni = 'personal';
+  _obTerpilih    = [];
+  document.getElementById('ob-cari-kontak').value = '';
+  document.getElementById('ob-nama-grup').value   = '';
+  document.querySelectorAll('.ob-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === 'personal'));
+  document.getElementById('ob-nama-grup-wrap')?.classList.add('hidden');
+  setText('ob-hint-pilih', 'Pilih 1 orang untuk mulai obrolan');
+  bukaModal('modal-obrolan-baru');
+  muatDaftarKontakObrolan();
+}
+
+async function muatDaftarKontakObrolan() {
+  const wrap = document.getElementById('ob-daftar-kontak');
+  if (!wrap) return;
+  wrap.innerHTML = `<div class="empty-state"><div class="empty-state-sub">Memuat kontak...</div></div>`;
+
+  const { data, error } = await sb
+    .from('profiles')
+    .select('id, nama, role, foto_profil_id')
+    .neq('id', APP.user.id)
+    .order('nama', { ascending: true });
+
+  if (error) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-state-title">Gagal memuat kontak</div><div class="empty-state-sub">${escapeHTML(error.message)}</div></div>`;
+    return;
+  }
+
+  _obSemuaKontak = data || [];
+  renderDaftarKontakObrolan();
+
+  document.getElementById('ob-cari-kontak')?.addEventListener('input', renderDaftarKontakObrolan);
+}
+
+function renderDaftarKontakObrolan() {
+  const wrap = document.getElementById('ob-daftar-kontak');
+  if (!wrap) return;
+  const q = (document.getElementById('ob-cari-kontak')?.value || '').toLowerCase();
+  const roleLabel = { admin: 'Admin', kepsek: 'Kepala Sekolah', guru: 'Guru', pegawai: 'Pegawai' };
+
+  const data = _obSemuaKontak.filter(k => !q || (k.nama || '').toLowerCase().includes(q));
+
+  if (!data.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-state-sub">Tidak ditemukan</div></div>`;
+    return;
+  }
+
+  wrap.innerHTML = data.map(k => {
+    const dicentang = _obTerpilih.includes(k.id);
+    return `
+      <div class="ob-kontak-item ${_obModeSaatIni === 'personal' ? 'radio' : ''}" data-id="${k.id}">
+        ${htmlAvatar(k.nama, k.foto_profil_id, 40)}
+        <div class="ob-kontak-info">
+          <div class="ob-kontak-nama">${escapeHTML(k.nama || '-')}</div>
+          <div class="ob-kontak-role">${roleLabel[k.role] || k.role || ''}</div>
+        </div>
+        <div class="ob-kontak-check ${dicentang ? 'checked' : ''}">
+          ${dicentang ? '<span class="material-symbols-rounded">check</span>' : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  wrap.querySelectorAll('.ob-kontak-item').forEach(item => {
+    item.addEventListener('click', () => pilihKontakObrolan(item.dataset.id));
+  });
+}
+
+function pilihKontakObrolan(id) {
+  if (_obModeSaatIni === 'personal') {
+    // Mode personal: hanya 1 orang yang boleh dipilih
+    _obTerpilih = _obTerpilih[0] === id ? [] : [id];
+  } else {
+    // Mode grup: bisa pilih banyak orang
+    const idx = _obTerpilih.indexOf(id);
+    if (idx > -1) _obTerpilih.splice(idx, 1);
+    else _obTerpilih.push(id);
+  }
+  renderDaftarKontakObrolan();
+  perbaruiTombolMulaiObrolan();
+}
+
+function perbaruiTombolMulaiObrolan() {
+  const btn = document.getElementById('btn-mulai-obrolan');
+  if (!btn) return;
+  if (_obModeSaatIni === 'personal') {
+    btn.disabled = _obTerpilih.length !== 1;
+  } else {
+    const namaGrup = document.getElementById('ob-nama-grup')?.value.trim();
+    btn.disabled = _obTerpilih.length < 1 || !namaGrup;
+  }
+}
+
+function gantiModeObrolanBaru(mode) {
+  _obModeSaatIni = mode;
+  _obTerpilih    = [];
+  document.querySelectorAll('.ob-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  document.querySelectorAll('.ob-tab').forEach(t => {
+    const aktif = t.dataset.mode === mode;
+    t.style.background   = aktif ? 'var(--primary-600)' : '#fff';
+    t.style.color         = aktif ? '#fff' : 'var(--gray-700)';
+    t.style.borderColor   = aktif ? 'var(--primary-600)' : 'var(--gray-200)';
+  });
+  document.getElementById('ob-nama-grup-wrap')?.classList.toggle('hidden', mode !== 'grup');
+  setText('ob-hint-pilih', mode === 'personal' ? 'Pilih 1 orang untuk mulai obrolan' : 'Pilih beberapa orang untuk grup');
+  renderDaftarKontakObrolan();
+  perbaruiTombolMulaiObrolan();
+}
+
+async function mulaiObrolanBaru() {
+  const btn = document.getElementById('btn-mulai-obrolan');
+  if (btn) btn.disabled = true;
+
+  try {
+    let roomId, roomName;
+
+    if (_obModeSaatIni === 'personal') {
+      const lawanId = _obTerpilih[0];
+      const kontak  = _obSemuaKontak.find(k => k.id === lawanId);
+      roomName = kontak?.nama || 'Obrolan';
+
+      // Cek apakah sudah ada room personal (bukan grup) antara kedua user ini
+      const { data: roomSayaList, error: errCekRoom } = await sb
+        .from('chat_participants')
+        .select('room_id, chat_rooms(id, is_group)')
+        .eq('guru_id', APP.user.id);
+
+      if (errCekRoom) throw errCekRoom;
+
+      let roomExisting = null;
+      const roomPersonalIds = (roomSayaList || [])
+        .filter(r => r.chat_rooms && r.chat_rooms.is_group === false)
+        .map(r => r.room_id);
+
+      if (roomPersonalIds.length) {
+        const { data: lawanDiRoom, error: errLawan } = await sb
+          .from('chat_participants')
+          .select('room_id')
+          .eq('guru_id', lawanId)
+          .in('room_id', roomPersonalIds);
+        if (errLawan) throw errLawan;
+        if (lawanDiRoom && lawanDiRoom.length) roomExisting = lawanDiRoom[0].room_id;
+      }
+
+      if (roomExisting) {
+        roomId = roomExisting;
+      } else {
+        const { data: roomBaru, error: errRoom } = await sb
+          .from('chat_rooms')
+          .insert({ nama_grup: null, is_group: false })
+          .select('id')
+          .single();
+        if (errRoom) throw errRoom;
+        roomId = roomBaru.id;
+
+        const { error: errPeserta } = await sb.from('chat_participants').insert([
+          { room_id: roomId, guru_id: APP.user.id },
+          { room_id: roomId, guru_id: lawanId },
+        ]);
+        if (errPeserta) throw errPeserta;
+      }
+    } else {
+      const namaGrup = document.getElementById('ob-nama-grup')?.value.trim();
+      if (!namaGrup) { toast('Nama grup wajib diisi', 'warning'); if (btn) btn.disabled = false; return; }
+      roomName = namaGrup;
+
+      const { data: roomBaru, error: errRoom } = await sb
+        .from('chat_rooms')
+        .insert({ nama_grup: namaGrup, is_group: true })
+        .select('id')
+        .single();
+      if (errRoom) throw errRoom;
+      roomId = roomBaru.id;
+
+      const peserta = [APP.user.id, ..._obTerpilih].map(uid => ({ room_id: roomId, guru_id: uid }));
+      const { error: errPeserta } = await sb.from('chat_participants').insert(peserta);
+      if (errPeserta) throw errPeserta;
+    }
+
+    tutupModal('modal-obrolan-baru');
+    await bukaRoomChat(roomId, roomName);
+  } catch (e) {
+    toast('Gagal membuat obrolan: ' + e.message, 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function initObrolanBaru() {
+  document.getElementById('btn-obrolan-baru')?.addEventListener('click', bukaModalObrolanBaru);
+  document.getElementById('close-modal-obrolan-baru')?.addEventListener('click', () => tutupModal('modal-obrolan-baru'));
+  document.querySelectorAll('.ob-tab').forEach(tab => {
+    tab.addEventListener('click', () => gantiModeObrolanBaru(tab.dataset.mode));
+  });
+  document.getElementById('ob-nama-grup')?.addEventListener('input', perbaruiTombolMulaiObrolan);
+  document.getElementById('btn-mulai-obrolan')?.addEventListener('click', mulaiObrolanBaru);
+}
+
 function initRealtime() {
   // Subscribe perubahan presensi real-time (opsional, tampilkan notif)
   if (APP.presensiChannel) {
@@ -5446,6 +6480,11 @@ function initModals() {
     tampilHalaman('login');
     toast('Berhasil keluar', 'success');
   });
+
+  // Modal tolak izin (alasan wajib diisi)
+  document.getElementById('close-modal-tolak-izin')?.addEventListener('click', () => tutupModal('modal-tolak-izin'));
+  document.getElementById('btn-batal-tolak-izin')?.addEventListener('click', () => tutupModal('modal-tolak-izin'));
+  document.getElementById('btn-konfirm-tolak-izin')?.addEventListener('click', konfirmasiTolakIzin);
 
   // Modal compose sosmed
   document.getElementById('btn-compose-post')?.addEventListener('click', () => bukaModal('modal-compose'));
@@ -5534,10 +6573,40 @@ function initNavigasi() {
     });
   });
 
-  // Menu Admin yang masih dalam pengembangan
-  ['qm-laporan', 'qm-kelola-guru', 'qm-pengaturan', 'menu-data-sekolah', 'menu-hari-kerja', 'menu-kelola-akun'].forEach(id => {
-    document.getElementById(id)?.addEventListener('click', () => toast('Fitur dalam pengembangan', 'default'));
+  // Menu admin yang sebelumnya nonaktif — sekarang aktif
+  document.getElementById('qm-pengaturan')?.addEventListener('click', () => tampilHalaman('profil'));
+
+  document.getElementById('menu-data-sekolah')?.addEventListener('click', () => {
+    tampilHalaman('data-sekolah');
+    muatDataSekolah();
   });
+
+  document.getElementById('menu-hari-kerja')?.addEventListener('click', () => {
+    tampilHalaman('hari-kerja');
+    muatHariKerja();
+  });
+
+  document.getElementById('btn-back-data-sekolah')?.addEventListener('click', () => tampilHalaman('profil'));
+  document.getElementById('btn-back-hari-kerja')?.addEventListener('click', () => tampilHalaman('profil'));
+ 
+  document.getElementById('qm-laporan')?.addEventListener('click', () => {
+    tampilHalaman('laporan');
+    muatLaporan();
+  });
+ 
+  document.getElementById('qm-kelola-guru')?.addEventListener('click', () => {
+    tampilHalaman('kelola-guru');
+    muatKelolaGuru();
+  });
+ 
+  document.getElementById('menu-kelola-akun')?.addEventListener('click', () => {
+    tampilHalaman('kelola-akun');
+    muatKelolaAkun();
+  });
+ 
+  document.getElementById('btn-back-laporan')?.addEventListener('click', () => tampilHalaman('beranda'));
+  document.getElementById('btn-back-kelola-guru')?.addEventListener('click', () => tampilHalaman('beranda'));
+  document.getElementById('btn-back-kelola-akun')?.addEventListener('click', () => tampilHalaman('profil'));
 
   // Quick menu beranda
   document.getElementById('qm-pengumuman')?.addEventListener('click', () => { tampilHalaman('pengumuman'); muatPengumuman(); });
@@ -5600,13 +6669,786 @@ function initAuthListener() {
 }
 
 /* ============================================================
+   LAPORAN
+============================================================ */
+let _laporanData = { rekap: [], izin: [] };
+let _laporanTab  = 'rekap';
+ 
+async function muatLaporan() {
+  const bulanEl = document.getElementById('laporan-bulan');
+  const tahunEl = document.getElementById('laporan-tahun');
+ 
+  // Isi dropdown tahun (5 tahun ke belakang)
+  if (tahunEl && !tahunEl.children.length) {
+    const now = new Date();
+    for (let y = now.getFullYear(); y >= now.getFullYear() - 4; y--) {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      tahunEl.appendChild(opt);
+    }
+    bulanEl.value = now.getMonth() + 1;
+    tahunEl.value = now.getFullYear();
+  }
+ 
+  // Tab switching
+  document.querySelectorAll('.laporan-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _laporanTab = btn.dataset.tab;
+      document.querySelectorAll('.laporan-tab').forEach(b => {
+        b.style.background = 'var(--gray-200)';
+        b.style.color = 'var(--gray-700)';
+      });
+      btn.style.background = 'var(--primary-600)';
+      btn.style.color = '#fff';
+      renderLaporanTab();
+    });
+  });
+ 
+  // Filter button
+  document.getElementById('btn-laporan-filter')?.addEventListener('click', fetchLaporanData);
+ 
+  // Export
+  document.getElementById('btn-export-laporan')?.addEventListener('click', exportLaporanCSV);
+}
+ 
+async function fetchLaporanData() {
+  const bln = parseInt(document.getElementById('laporan-bulan')?.value);
+  const thn = parseInt(document.getElementById('laporan-tahun')?.value);
+  const content = document.getElementById('laporan-content');
+  if (!bln || !thn || !content) return;
+ 
+  content.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><span class="material-symbols-rounded" style="animation:spin 1s linear infinite;">progress_activity</span></div><div class="empty-state-title">Memuat data...</div></div>`;
+ 
+  const [rekap, izin] = await Promise.all([
+    sb.rpc('laporan_rekapitulasi_bulan', { bln, thn }),
+    sb.rpc('laporan_izin_bulan',          { bln, thn }),
+  ]);
+ 
+  _laporanData.rekap = rekap.data || [];
+  _laporanData.izin  = izin.data  || [];
+ 
+  const namaBulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  const subtitle = document.getElementById('laporan-subtitle');
+  if (subtitle) subtitle.textContent = `${namaBulan[bln-1]} ${thn}`;
+ 
+  renderLaporanTab();
+}
+ 
+function renderLaporanTab() {
+  const content = document.getElementById('laporan-content');
+  if (!content) return;
+ 
+  if (_laporanTab === 'rekap') {
+    const data = _laporanData.rekap;
+    if (!data.length) {
+      content.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><span class="material-symbols-rounded">inbox</span></div><div class="empty-state-title">Tidak ada data</div></div>`;
+      return;
+    }
+    const rows = data.map(r => `
+      <tr>
+        <td style="padding:10px 12px;font-size:12px;border-bottom:1px solid var(--gray-100);">${escapeHTML(r.nama||'-')}</td>
+        <td style="padding:10px 8px;font-size:12px;text-align:center;border-bottom:1px solid var(--gray-100);color:var(--success-600);font-weight:600;">${r.hadir||0}</td>
+        <td style="padding:10px 8px;font-size:12px;text-align:center;border-bottom:1px solid var(--gray-100);color:var(--warning-600);font-weight:600;">${r.terlambat||0}</td>
+        <td style="padding:10px 8px;font-size:12px;text-align:center;border-bottom:1px solid var(--gray-100);color:var(--info-500);font-weight:600;">${r.sakit||0}</td>
+        <td style="padding:10px 8px;font-size:12px;text-align:center;border-bottom:1px solid var(--gray-100);color:var(--primary-600);font-weight:600;">${r.izin||0}</td>
+        <td style="padding:10px 8px;font-size:12px;text-align:center;border-bottom:1px solid var(--gray-100);color:var(--danger-500);font-weight:600;">${r.alfa||0}</td>
+      </tr>`).join('');
+ 
+    content.innerHTML = `
+      <div style="overflow-x:auto;padding:0 16px;">
+        <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);">
+          <thead>
+            <tr style="background:var(--primary-700);color:#fff;">
+              <th style="padding:10px 12px;font-size:11px;text-align:left;font-weight:600;">Nama Guru</th>
+              <th style="padding:10px 6px;font-size:11px;text-align:center;font-weight:600;">Hadir</th>
+              <th style="padding:10px 6px;font-size:11px;text-align:center;font-weight:600;">Terlambat</th>
+              <th style="padding:10px 6px;font-size:11px;text-align:center;font-weight:600;">Sakit</th>
+              <th style="padding:10px 6px;font-size:11px;text-align:center;font-weight:600;">Izin</th>
+              <th style="padding:10px 6px;font-size:11px;text-align:center;font-weight:600;">Alfa</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="height:16px;"></div>
+      </div>`;
+ 
+  } else {
+    // Tab Izin
+    const data = _laporanData.izin;
+    if (!data.length) {
+      content.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><span class="material-symbols-rounded">event_available</span></div><div class="empty-state-title">Tidak ada pengajuan izin</div></div>`;
+      return;
+    }
+    const cards = data.map(r => {
+      const badge = r.status_approval === 'Disetujui' ? 'var(--success-500)' :
+                    r.status_approval === 'Ditolak'   ? 'var(--danger-500)' : 'var(--warning-500)';
+      return `
+        <div style="background:#fff;border-radius:var(--radius-md);padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow-xs);">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div style="font-weight:600;font-size:13px;">${escapeHTML(r.nama||'-')}</div>
+              <div style="font-size:11px;color:var(--gray-500);">${escapeHTML(r.mapel||'-')}</div>
+            </div>
+            <span style="font-size:10px;font-weight:700;background:${badge};color:#fff;padding:3px 8px;border-radius:var(--radius-full);">${escapeHTML(r.status_approval)}</span>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+            <span style="font-size:11px;background:var(--gray-100);padding:3px 8px;border-radius:var(--radius-full);">${escapeHTML(r.jenis_izin)}</span>
+            <span style="font-size:11px;background:var(--gray-100);padding:3px 8px;border-radius:var(--radius-full);">${new Date(r.tanggal_mulai).toLocaleDateString('id-ID',{day:'numeric',month:'short'})} – ${new Date(r.tanggal_selesai).toLocaleDateString('id-ID',{day:'numeric',month:'short'})}</span>
+            <span style="font-size:11px;background:var(--gray-100);padding:3px 8px;border-radius:var(--radius-full);">${r.durasi_hari} hari</span>
+          </div>
+          ${r.keterangan ? `<div style="margin-top:6px;font-size:11px;color:var(--gray-600);font-style:italic;">"${escapeHTML(r.keterangan)}"</div>` : ''}
+        </div>`;
+    }).join('');
+ 
+    content.innerHTML = `<div style="padding:0 16px;">${cards}<div style="height:16px;"></div></div>`;
+  }
+}
+ 
+function exportLaporanCSV() {
+  if (!_laporanData.rekap.length) { toast('Muat data laporan terlebih dahulu', 'warning'); return; }
+  const headers = ['Nama','NIP','Pangkat','Mapel','Role','Hadir','Terlambat','Sakit','Izin','Alfa','Hari Kerja'];
+  const rows = _laporanData.rekap.map(r =>
+    [r.nama,r.nip,r.pangkat,r.mapel,r.role,r.hadir,r.terlambat,r.sakit,r.izin,r.alfa,r.total_hari_kerja]
+    .map(v => `"${(v??'').toString().replace(/"/g,'""')}"`)
+    .join(',')
+  );
+  const csv = [headers.join(','), ...rows].join('\n');
+  const url = URL.createObjectURL(new Blob(['\uFEFF'+csv], { type: 'text/csv;charset=utf-8;' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = `laporan_presensi_${new Date().toISOString().slice(0,7)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('✅ File CSV berhasil diunduh', 'success');
+}
+ 
+ 
+/* ============================================================
+   KELOLA GURU — query langsung ke profiles (tanpa RPC)
+============================================================ */
+let _allGuru = [];
+let _filterRoleGuru = '';
+ 
+async function muatKelolaGuru() {
+  const list = document.getElementById('kelola-guru-list');
+  if (!list) return;
+  list.innerHTML = `<div class="empty-state"><div class="empty-state-sub">Memuat data guru...</div></div>`;
+ 
+  // Query langsung ke profiles — tidak butuh RPC
+  const { data, error } = await sb
+    .from('profiles')
+    .select('id, username, nama, nip, pangkat, mapel, kelamin, role, tipe_kehadiran, foto_profil_id')
+    .order('nama', { ascending: true });
+ 
+  if (error) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-title">Gagal memuat data</div><div class="empty-state-sub">${error.message}</div></div>`;
+    return;
+  }
+ 
+  _allGuru = data || [];
+  const subtitle = document.getElementById('kelola-guru-subtitle');
+  if (subtitle) subtitle.textContent = `${_allGuru.length} pengguna terdaftar`;
+ 
+  renderKelolaGuruList();
+ 
+  // Search
+  const searchEl = document.getElementById('kelola-guru-search');
+  if (searchEl) {
+    searchEl.removeEventListener('input', renderKelolaGuruList);
+    searchEl.addEventListener('input', renderKelolaGuruList);
+  }
+ 
+  // Filter role chips
+  document.querySelectorAll('#kelola-guru-filter-role .filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#kelola-guru-filter-role .filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      _filterRoleGuru = chip.dataset.role;
+      renderKelolaGuruList();
+    });
+  });
+ 
+  // Modal close
+  document.getElementById('close-modal-edit-guru')?.addEventListener('click', () => {
+    document.getElementById('modal-edit-guru')?.classList.remove('active');
+  });
+}
+ 
+function renderKelolaGuruList() {
+  const list = document.getElementById('kelola-guru-list');
+  const q    = (document.getElementById('kelola-guru-search')?.value || '').toLowerCase();
+  const data = _allGuru.filter(g => {
+    const cocok = !q ||
+      (g.nama   || '').toLowerCase().includes(q) ||
+      (g.nip    || '').toLowerCase().includes(q) ||
+      (g.mapel  || '').toLowerCase().includes(q);
+    const cocokRole = !_filterRoleGuru || g.role === _filterRoleGuru;
+    return cocok && cocokRole;
+  });
+ 
+  if (!data.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-title">Tidak ditemukan</div></div>`;
+    return;
+  }
+ 
+  const roleColor = {
+    admin:   'var(--danger-500)',
+    kepsek:  'var(--warning-600)',
+    guru:    'var(--primary-600)',
+    pegawai: 'var(--success-600)'
+  };
+  const roleLabel = {
+    admin:   'ADMIN',
+    kepsek:  'KEPSEK',
+    guru:    'GURU',
+    pegawai: 'PEGAWAI'
+  };
+ 
+  list.innerHTML = data.map(g => `
+    <div style="background:#fff;border-radius:var(--radius-md);padding:14px 16px;margin:0 16px 8px;box-shadow:var(--shadow-xs);display:flex;align-items:center;gap:12px;">
+      <div style="width:42px;height:42px;border-radius:50%;background:var(--primary-600);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;">${inisial(g.nama || '?')}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.nama || '-')}</div>
+        <div style="font-size:11px;color:var(--gray-500);">NIP: ${escapeHTML(g.nip || '-')} · ${escapeHTML(g.mapel || '-')}</div>
+        <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;">
+          <span style="font-size:10px;font-weight:700;background:${roleColor[g.role] || 'var(--gray-500)'};color:#fff;padding:2px 7px;border-radius:var(--radius-full);">${roleLabel[g.role] || g.role?.toUpperCase()}</span>
+          ${g.pangkat ? `<span style="font-size:10px;background:var(--gray-100);color:var(--gray-600);padding:2px 7px;border-radius:var(--radius-full);">${escapeHTML(g.pangkat)}</span>` : ''}
+        </div>
+      </div>
+      <button data-guru-id="${g.id}" class="btn-edit-guru" style="background:none;border:1.5px solid var(--gray-200);padding:8px;border-radius:var(--radius-md);cursor:pointer;display:flex;align-items:center;">
+        <span class="material-symbols-rounded" style="font-size:18px;color:var(--primary-600);">edit</span>
+      </button>
+    </div>`).join('') + '<div style="height:16px;"></div>';
+ 
+  list.querySelectorAll('.btn-edit-guru').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const g = _allGuru.find(x => x.id === btn.dataset.guruId);
+      if (g) bukaModalEditGuru(g);
+    });
+  });
+}
+ 
+
+function bukaModalEditGuru(g) {
+  const modal = document.getElementById('modal-edit-guru');
+  const title = document.getElementById('modal-edit-guru-title');
+  const body  = document.getElementById('modal-edit-guru-body');
+  if (!modal || !body) return;
+
+  if (title) title.textContent = `Edit: ${g.nama || 'Pengguna'}`;
+
+  body.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Nama Lengkap</label>
+        <input id="eg-nama" type="text" value="${escapeHTML(g.nama || '')}"
+          style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">NIP</label>
+        <input id="eg-nip" type="text" value="${escapeHTML(g.nip || '')}"
+          style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Pangkat / Golongan</label>
+        <input id="eg-pangkat" type="text" value="${escapeHTML(g.pangkat || '')}"
+          style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Mata Pelajaran / Jabatan</label>
+        <input id="eg-mapel" type="text" value="${escapeHTML(g.mapel || '')}"
+          style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;" />
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Jenis Kelamin</label>
+        <select id="eg-kelamin"
+          style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;">
+          <option value=""  ${!g.kelamin        ? 'selected' : ''}>— Pilih —</option>
+          <option value="L" ${g.kelamin === 'L' ? 'selected' : ''}>Laki-laki</option>
+          <option value="P" ${g.kelamin === 'P' ? 'selected' : ''}>Perempuan</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Role</label>
+        <select id="eg-role"
+          style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;">
+          <option value="guru"    ${g.role === 'guru'    ? 'selected' : ''}>Guru</option>
+          <option value="pegawai" ${g.role === 'pegawai' ? 'selected' : ''}>Pegawai</option>
+          <option value="kepsek"  ${g.role === 'kepsek'  ? 'selected' : ''}>Kepala Sekolah</option>
+          <option value="admin"   ${g.role === 'admin'   ? 'selected' : ''}>Admin</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">Tipe Kehadiran</label>
+        <select id="eg-tipe"
+          style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:14px;font-family:var(--font-main);background:var(--gray-50);outline:none;">
+          <option value="global" ${g.tipe_kehadiran === 'global' ? 'selected' : ''}>Global (jam sekolah)</option>
+          <option value="jadwal" ${g.tipe_kehadiran === 'jadwal' ? 'selected' : ''}>Sesuai Jadwal Mengajar</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button id="btn-batal-edit-guru" class="btn-tolak" style="flex:1;" type="button">Batal</button>
+        <button id="btn-simpan-edit-guru" class="btn-primary" style="flex:2;" type="button" data-guru-id="${g.id}">
+          <span class="material-symbols-rounded">save</span> Simpan
+        </button>
+      </div>
+    </div>`;
+
+  modal.classList.add('open');                                                          // ← ganti active → open
+  document.getElementById('btn-batal-edit-guru')?.addEventListener('click', () => modal.classList.remove('open'));  // ← open
+  document.getElementById('btn-simpan-edit-guru')?.addEventListener('click', () => simpanEditGuru(g.id));
+}
+
+async function simpanEditGuru(guruId) {
+  const payload = {
+    nama          : document.getElementById('eg-nama')?.value.trim(),
+    nip           : document.getElementById('eg-nip')?.value.trim(),
+    pangkat       : document.getElementById('eg-pangkat')?.value.trim(),
+    mapel         : document.getElementById('eg-mapel')?.value.trim(),
+    kelamin       : document.getElementById('eg-kelamin')?.value,
+    role          : document.getElementById('eg-role')?.value,
+    tipe_kehadiran: document.getElementById('eg-tipe')?.value,
+  };
+
+  const btn = document.getElementById('btn-simpan-edit-guru');
+  if (btn) btn.disabled = true;
+
+  const { error } = await sb.from('profiles').update(payload).eq('id', guruId);
+
+  if (error) {
+    toast('Gagal menyimpan: ' + error.message, 'error');
+    if (btn) btn.disabled = false;
+    return;
+  }
+
+  const idx = _allGuru.findIndex(g => g.id === guruId);
+  if (idx > -1) _allGuru[idx] = { ..._allGuru[idx], ...payload };
+
+  toast('✅ Data berhasil diperbarui', 'success');
+  document.getElementById('modal-edit-guru')?.classList.remove('open');                // ← open
+  renderKelolaGuruList();
+}
+ 
+ 
+/* ============================================================
+   KELOLA AKUN — query profiles dulu, email via RPC sederhana
+============================================================ */
+let _allAkun = [];
+ 
+async function muatKelolaAkun() {
+  const list = document.getElementById('kelola-akun-list');
+  if (!list) return;
+  list.innerHTML = `<div class="empty-state"><div class="empty-state-sub">Memuat daftar akun...</div></div>`;
+ 
+  // Ambil profiles dulu (pasti berhasil karena RLS sudah ada)
+  const { data: profiles, error } = await sb
+    .from('profiles')
+    .select('id, nama, role')
+    .order('nama', { ascending: true });
+ 
+  if (error) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-title">Gagal memuat data</div><div class="empty-state-sub">${error.message}</div></div>`;
+    return;
+  }
+ 
+  // Ambil email via RPC (lebih sederhana dari get_guru_list)
+  const { data: emailData } = await sb.rpc('admin_get_emails');
+  const emailMap = {};
+  if (emailData) emailData.forEach(r => { emailMap[r.id] = r.email; });
+ 
+  _allAkun = (profiles || []).map(p => ({
+    ...p,
+    email: emailMap[p.id] || '(email tidak tersedia)'
+  }));
+ 
+  renderKelolaAkunList();
+ 
+  document.getElementById('kelola-akun-search')?.addEventListener('input', renderKelolaAkunList);
+  document.getElementById('close-modal-edit-akun')?.addEventListener('click', () => {
+    document.getElementById('modal-edit-akun')?.classList.remove('open');
+  });
+  document.getElementById('btn-simpan-akun')?.addEventListener('click', simpanEditAkun);
+}
+ 
+function renderKelolaAkunList() {
+  const list = document.getElementById('kelola-akun-list');
+  const q = (document.getElementById('kelola-akun-search')?.value || '').toLowerCase();
+  const data = _allAkun.filter(g =>
+    !q || (g.nama || '').toLowerCase().includes(q) || (g.email || '').toLowerCase().includes(q)
+  );
+ 
+  const roleLabel = { admin:'Admin', kepsek:'Kepsek', guru:'Guru', pegawai:'Pegawai' };
+  const roleColor = { admin:'var(--danger-500)', kepsek:'var(--warning-600)', guru:'var(--primary-600)', pegawai:'var(--success-600)' };
+ 
+  if (!data.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-title">Tidak ditemukan</div></div>`;
+    return;
+  }
+ 
+  list.innerHTML = data.map(g => `
+    <div style="background:#fff;border-radius:var(--radius-md);padding:14px 16px;margin:0 16px 8px;box-shadow:var(--shadow-xs);display:flex;align-items:center;gap:12px;">
+      <div style="width:42px;height:42px;border-radius:50%;background:${roleColor[g.role]||'var(--gray-400)'};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;">${inisial(g.nama||'?')}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:13px;">${escapeHTML(g.nama || '-')}</div>
+        <div style="font-size:11px;color:var(--gray-500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.email)}</div>
+        <div style="margin-top:2px;">
+          <span style="font-size:10px;font-weight:700;background:${roleColor[g.role]||'var(--gray-400)'};color:#fff;padding:2px 7px;border-radius:var(--radius-full);">${roleLabel[g.role]||g.role}</span>
+        </div>
+      </div>
+      <button data-akun-id="${g.id}" data-email="${escapeHTML(g.email)}" data-nama="${escapeHTML(g.nama||'')}"
+        class="btn-edit-akun"
+        style="background:none;border:1.5px solid var(--gray-200);padding:8px;border-radius:var(--radius-md);cursor:pointer;display:flex;align-items:center;">
+        <span class="material-symbols-rounded" style="font-size:18px;color:var(--primary-600);">manage_accounts</span>
+      </button>
+    </div>`).join('') + '<div style="height:16px;"></div>';
+ 
+  list.querySelectorAll('.btn-edit-akun').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('akun-target-user-id').value  = btn.dataset.akunId;
+      document.getElementById('akun-new-email').value       = btn.dataset.email === '(email tidak tersedia)' ? '' : btn.dataset.email;
+      document.getElementById('akun-new-password').value    = '';
+      document.getElementById('modal-edit-akun-title').textContent = `Edit Akun: ${btn.dataset.nama}`;
+      document.getElementById('modal-edit-akun')?.classList.add('open');
+    });
+  });
+}
+ 
+async function simpanEditAkun() {
+  const userId   = document.getElementById('akun-target-user-id')?.value;
+  const newEmail = document.getElementById('akun-new-email')?.value.trim();
+  const newPass  = document.getElementById('akun-new-password')?.value;
+  const btn      = document.getElementById('btn-simpan-akun');
+ 
+  if (!userId || !newEmail) { toast('Email tidak boleh kosong', 'warning'); return; }
+  if (btn) btn.disabled = true;
+ 
+  const { error: errEmail } = await sb.rpc('admin_update_user_email', {
+    user_id: userId, new_email: newEmail
+  });
+  if (errEmail) {
+    toast('Gagal update email: ' + errEmail.message, 'error');
+    if (btn) btn.disabled = false;
+    return;
+  }
+ 
+  if (newPass) {
+    const { error: errPass } = await sb.rpc('admin_update_user_password', {
+      user_id: userId, new_password: newPass
+    });
+    if (errPass) {
+      toast('Email berhasil diupdate, tapi password gagal: ' + errPass.message, 'warning');
+      if (btn) btn.disabled = false;
+      return;
+    }
+  }
+ 
+  const idx = _allAkun.findIndex(g => g.id === userId);
+  if (idx > -1) _allAkun[idx].email = newEmail;
+ 
+  toast('✅ Akun berhasil diperbarui', 'success');
+  document.getElementById('modal-edit-akun')?.classList.remove('open');
+  renderKelolaAkunList();
+  if (btn) btn.disabled = false;
+}
+
+/* ============================================================
+   23. DATA SEKOLAH (Admin) — identitas, koordinat, radius
+   ============================================================ */
+async function muatDataSekolah() {
+  try {
+    const { data, error } = await sb.from('data_sekolah').select('*').eq('id', 1).single();
+    if (error) throw new Error(error.message);
+
+    APP.sekolah = data || {};
+    const s = APP.sekolah;
+
+    setVal('ds-pemerintah',   s.pemerintah);
+    setVal('ds-instansi',     s.instansi);
+    setVal('ds-nama-sekolah', s.nama_sekolah);
+    setVal('ds-npsn',         s.npsn);
+    setVal('ds-alamat',       s.alamat);
+    setVal('ds-lat',          s.lat_sekolah);
+    setVal('ds-lng',          s.lng_sekolah);
+    setVal('ds-radius',       s.radius_meter ?? 50);
+    setVal('ds-jam-masuk',    s.jam_masuk_global ? s.jam_masuk_global.slice(0,5) : '');
+    setVal('ds-jam-pulang',   s.jam_pulang_global ? s.jam_pulang_global.slice(0,5) : '');
+    setVal('ds-toleransi',    s.toleransi_terlambat_menit);
+
+    renderLogoPreview('ds-logo-kiri-preview',  s.logo_kiri);
+    renderLogoPreview('ds-logo-kanan-preview', s.logo_kanan);
+  } catch (e) {
+    toast('Gagal memuat data sekolah: ' + e.message, 'error');
+  }
+}
+
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = (val === null || val === undefined) ? '' : val;
+}
+
+function renderLogoPreview(elId, fileId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (fileId) {
+    el.innerHTML = `<img src="https://drive.google.com/thumbnail?id=${fileId}&sz=w200" style="width:100%;height:100%;object-fit:contain;" />`;
+  } else {
+    el.innerHTML = `<span class="material-symbols-rounded" style="font-size:32px;color:var(--gray-400);">image</span>`;
+  }
+}
+
+function ambilLokasiSekolah() {
+  if (!navigator.geolocation) {
+    toast('Perangkat tidak mendukung GPS', 'warning');
+    return;
+  }
+  const btn = document.getElementById('btn-ambil-lokasi-sekolah');
+  if (btn) btn.innerHTML = '<span class="material-symbols-rounded" style="animation:spin 1s linear infinite;">progress_activity</span> Mendeteksi lokasi...';
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      setVal('ds-lat', pos.coords.latitude.toFixed(6));
+      setVal('ds-lng', pos.coords.longitude.toFixed(6));
+      toast('📍 Lokasi berhasil diambil', 'success');
+      if (btn) btn.innerHTML = '<span class="material-symbols-rounded">my_location</span> Ambil Lokasi Saat Ini';
+    },
+    err => {
+      const pesan = err.code === 1 ? 'Izin lokasi ditolak' : 'Gagal mendeteksi lokasi';
+      toast(pesan, 'error');
+      if (btn) btn.innerHTML = '<span class="material-symbols-rounded">my_location</span> Ambil Lokasi Saat Ini';
+    },
+    { enableHighAccuracy: true, timeout: 15000 }
+  );
+}
+
+async function uploadLogoSekolah(file, sisi) {
+  // sisi: 'kiri' | 'kanan'
+  const previewEl = document.getElementById(`ds-logo-${sisi}-preview`);
+  const btnEl = document.getElementById(`btn-upload-logo-${sisi}`);
+  if (btnEl) btnEl.innerHTML = '<span class="material-symbols-rounded" style="font-size:16px;animation:spin 1s linear infinite;">progress_activity</span> Mengunggah...';
+
+  try {
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    const base64Final = await kompresFotoJikaPerlu(base64);
+    const namaFile     = `logo_${sisi}_sekolah_${Date.now()}.jpg`;
+
+    const fileId = await uploadFotoKeGoogleDrive(base64Final, namaFile, 'sekolah');
+    if (!fileId) throw new Error('Server tidak mengembalikan ID file');
+
+    const kolom = sisi === 'kiri' ? 'logo_kiri' : 'logo_kanan';
+    const { error } = await sb.from('data_sekolah').update({ [kolom]: fileId }).eq('id', 1);
+    if (error) throw new Error(error.message);
+
+    APP.sekolah = APP.sekolah || {};
+    APP.sekolah[kolom] = fileId;
+    renderLogoPreview(`ds-logo-${sisi}-preview`, fileId);
+    toast('✅ Logo berhasil diperbarui', 'success');
+  } catch (e) {
+    toast('❌ Gagal upload logo: ' + e.message, 'error', 5000);
+  } finally {
+    if (btnEl) {
+      const label = sisi === 'kiri' ? 'Logo Kiri' : 'Logo Kanan';
+      btnEl.innerHTML = `<span class="material-symbols-rounded" style="font-size:16px;">upload</span> ${label}`;
+    }
+  }
+}
+
+async function simpanDataSekolah() {
+  const btn = document.getElementById('btn-simpan-data-sekolah');
+
+  const radius = Number(document.getElementById('ds-radius')?.value);
+  if (!radius || radius < 10) {
+    toast('Radius minimal 10 meter', 'warning');
+    return;
+  }
+
+  const lat = document.getElementById('ds-lat')?.value;
+  const lng = document.getElementById('ds-lng')?.value;
+
+  const payload = {
+    pemerintah:   document.getElementById('ds-pemerintah')?.value.trim() || null,
+    instansi:     document.getElementById('ds-instansi')?.value.trim() || null,
+    nama_sekolah: document.getElementById('ds-nama-sekolah')?.value.trim() || null,
+    npsn:         document.getElementById('ds-npsn')?.value.trim() || null,
+    alamat:       document.getElementById('ds-alamat')?.value.trim() || null,
+    lat_sekolah:  lat ? Number(lat) : null,
+    lng_sekolah:  lng ? Number(lng) : null,
+    radius_meter: radius,
+    jam_masuk_global:  document.getElementById('ds-jam-masuk')?.value || null,
+    jam_pulang_global: document.getElementById('ds-jam-pulang')?.value || null,
+    toleransi_terlambat_menit: Number(document.getElementById('ds-toleransi')?.value) || 0,
+  };
+
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="material-symbols-rounded" style="animation:spin 1s linear infinite;">progress_activity</span> Menyimpan...'; }
+
+  const { error } = await sb.from('data_sekolah').update(payload).eq('id', 1);
+
+  if (error) {
+    toast('Gagal menyimpan: ' + error.message, 'error');
+  } else {
+    APP.sekolah = { ...APP.sekolah, ...payload };
+    setText('login-school-name', payload.nama_sekolah || 'PresensiGuru');
+    setText('header-school-name', payload.nama_sekolah || 'PresensiGuru');
+    updateStatusLokasiUI();
+    toast('✅ Data sekolah berhasil disimpan', 'success');
+  }
+
+  if (btn) { btn.disabled = false; btn.innerHTML = '<span class="material-symbols-rounded">save</span> Simpan Data Sekolah'; }
+}
+
+/* ============================================================
+   24. KONFIGURASI HARI KERJA — toggle hari aktif + hari libur
+   ============================================================ */
+async function muatHariKerja() {
+  await Promise.all([muatDaftarHari(), muatDaftarLibur()]);
+}
+
+async function muatDaftarHari() {
+  const wrap = document.getElementById('hk-daftar-hari');
+  if (!wrap) return;
+  wrap.innerHTML = `<div style="padding:16px;text-align:center;color:var(--gray-500);font-size:13px;">Memuat...</div>`;
+
+  const { data, error } = await sb.from('konfigurasi_hari').select('*').order('id', { ascending: true });
+  if (error) {
+    wrap.innerHTML = `<div style="padding:16px;text-align:center;color:var(--danger-500);font-size:13px;">${error.message}</div>`;
+    return;
+  }
+
+  wrap.innerHTML = (data || []).map((h, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;${i > 0 ? 'border-top:1px solid var(--gray-100);' : ''}">
+      <span style="font-size:14px;font-weight:600;color:var(--gray-800);">${escapeHTML(h.nama_hari)}</span>
+      <label class="toggle-switch" style="position:relative;display:inline-block;width:44px;height:26px;">
+        <input type="checkbox" class="hk-toggle-hari" data-id="${h.id}" ${h.is_hari_kerja ? 'checked' : ''} style="opacity:0;width:0;height:0;">
+        <span class="hk-toggle-slider" data-id="${h.id}" style="position:absolute;inset:0;background:${h.is_hari_kerja ? 'var(--success-500)' : 'var(--gray-300)'};border-radius:var(--radius-full);cursor:pointer;transition:background 0.2s;">
+          <span style="position:absolute;top:3px;left:${h.is_hari_kerja ? '21px' : '3px'};width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:var(--shadow-xs);transition:left 0.2s;"></span>
+        </span>
+      </label>
+    </div>
+  `).join('');
+
+  wrap.querySelectorAll('.hk-toggle-slider').forEach(slider => {
+    slider.addEventListener('click', () => toggleHariKerja(slider.dataset.id));
+  });
+}
+
+async function toggleHariKerja(id) {
+  const checkbox = document.querySelector(`.hk-toggle-hari[data-id="${id}"]`);
+  const nilaiBaru = !checkbox?.checked;
+
+  const { error } = await sb.from('konfigurasi_hari').update({ is_hari_kerja: nilaiBaru }).eq('id', id);
+  if (error) {
+    toast('Gagal mengubah: ' + error.message, 'error');
+    return;
+  }
+  await muatDaftarHari();
+}
+
+async function muatDaftarLibur() {
+  const wrap = document.getElementById('hk-daftar-libur');
+  if (!wrap) return;
+  wrap.innerHTML = `<div class="empty-state"><div class="empty-state-sub">Memuat daftar hari libur...</div></div>`;
+
+  const { data, error } = await sb.from('hari_libur')
+    .select('*')
+    .order('tanggal', { ascending: true });
+
+  if (error) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-state-title">Gagal memuat</div><div class="empty-state-sub">${error.message}</div></div>`;
+    return;
+  }
+
+  if (!data || !data.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-state-title">Belum ada hari libur</div><div class="empty-state-sub">Tekan "Tambah" untuk menambahkan</div></div>`;
+    return;
+  }
+
+  wrap.innerHTML = data.map(l => `
+    <div style="background:#fff;border-radius:var(--radius-md);padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow-xs);display:flex;align-items:center;gap:12px;">
+      <div style="width:42px;height:42px;border-radius:var(--radius-md);background:var(--danger-50);color:var(--danger-500);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <span class="material-symbols-rounded" style="font-size:20px;">event_busy</span>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:13px;">${new Date(l.tanggal + 'T00:00:00').toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}</div>
+        <div style="font-size:12px;color:var(--gray-500);">${escapeHTML(l.keterangan || '-')}</div>
+      </div>
+      <button data-libur-id="${l.id}" class="btn-hapus-libur" style="background:none;border:none;cursor:pointer;padding:6px;display:flex;">
+        <span class="material-symbols-rounded" style="font-size:18px;color:var(--danger-500);">delete</span>
+      </button>
+    </div>`).join('');
+
+  wrap.querySelectorAll('.btn-hapus-libur').forEach(btn => {
+    btn.addEventListener('click', () => hapusHariLibur(btn.dataset.liburId));
+  });
+}
+
+async function hapusHariLibur(id) {
+  const { error } = await sb.from('hari_libur').delete().eq('id', id);
+  if (error) {
+    toast('Gagal menghapus: ' + error.message, 'error');
+    return;
+  }
+  toast('Hari libur dihapus', 'success');
+  await muatDaftarLibur();
+}
+
+async function simpanHariLibur() {
+  const tanggal    = document.getElementById('libur-tanggal')?.value;
+  const keterangan = document.getElementById('libur-keterangan')?.value.trim();
+  const btn        = document.getElementById('btn-simpan-libur');
+
+  if (!tanggal) { toast('Tanggal wajib diisi', 'warning'); return; }
+
+  if (btn) btn.disabled = true;
+  const { error } = await sb.from('hari_libur').insert({ tanggal, keterangan: keterangan || null });
+  if (btn) btn.disabled = false;
+
+  if (error) {
+    toast('Gagal menyimpan: ' + error.message, 'error');
+    return;
+  }
+
+  toast('✅ Hari libur ditambahkan', 'success');
+  document.getElementById('modal-tambah-libur')?.classList.remove('open');
+  setVal('libur-tanggal', '');
+  setVal('libur-keterangan', '');
+  await muatDaftarLibur();
+}
+
+function initDataSekolahDanHariKerja() {
+  document.getElementById('btn-simpan-data-sekolah')?.addEventListener('click', simpanDataSekolah);
+  document.getElementById('btn-ambil-lokasi-sekolah')?.addEventListener('click', ambilLokasiSekolah);
+
+  document.getElementById('btn-upload-logo-kiri')?.addEventListener('click', () => document.getElementById('input-logo-kiri')?.click());
+  document.getElementById('btn-upload-logo-kanan')?.addEventListener('click', () => document.getElementById('input-logo-kanan')?.click());
+  document.getElementById('input-logo-kiri')?.addEventListener('change', e => {
+    if (e.target.files?.[0]) uploadLogoSekolah(e.target.files[0], 'kiri');
+  });
+  document.getElementById('input-logo-kanan')?.addEventListener('change', e => {
+    if (e.target.files?.[0]) uploadLogoSekolah(e.target.files[0], 'kanan');
+  });
+
+  document.getElementById('btn-tambah-libur')?.addEventListener('click', () => {
+    document.getElementById('modal-tambah-libur')?.classList.add('open');
+  });
+  document.getElementById('close-modal-tambah-libur')?.addEventListener('click', () => {
+    document.getElementById('modal-tambah-libur')?.classList.remove('open');
+  });
+  document.getElementById('btn-simpan-libur')?.addEventListener('click', simpanHariLibur);
+}
+
+/* ============================================================
    22. ENTRY POINT — Semua dimulai di sini
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
   initLogin();
   initModals();
+  initObrolanBaru();
   initNavigasi();
   initAuthListener();
+  initDataSekolahDanHariKerja();
   mulaiAplikasi();
 });
 
