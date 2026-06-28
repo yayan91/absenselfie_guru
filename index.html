@@ -3797,8 +3797,8 @@
 /* ============================================================
    0. KONFIGURASI SUPABASE
    ============================================================ */
-const SUPABASE_URL  = 'https://crqelkyeyezawprlwxsr.supabase.co';
-const SUPABASE_ANON = 'sb_publishable_FHQ57UzA2kGfRcQqg8FHEA_KE9BQhl2';
+const SUPABASE_URL  = 'https://wgxrpwgpjnndarugaukh.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_megpgJYSsMLTLasavc7z2w_bAA4mjQS';
 
 // Inisialisasi client Supabase (menggunakan CDN global window.supabase)
 const { createClient } = window.supabase;
@@ -6784,6 +6784,7 @@ async function mulaiObrolanBaru() {
 
   try {
     let roomId, roomName;
+    let roomExisting = null;
 
     if (_obModeSaatIni === 'personal') {
       const lawanId = _obTerpilih[0];
@@ -6798,7 +6799,6 @@ async function mulaiObrolanBaru() {
 
       if (errCekRoom) throw errCekRoom;
 
-      let roomExisting = null;
       const roomPersonalIds = (roomSayaList || [])
         .filter(r => r.chat_rooms && r.chat_rooms.is_group === false)
         .map(r => r.room_id);
