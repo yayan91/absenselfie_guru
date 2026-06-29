@@ -899,6 +899,8 @@
     .status-pill.terlambat { background: var(--warning-500); color: #fff; }
     .status-pill.belum    { background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.9); }
     .status-pill.pulang   { background: var(--info-500); color: #fff; }
+    .status-pill.pulang-cepat   { background: var(--warning-500); color: #fff; }
+    .status-pill.pulang-tepat-waktu { background: var(--info-500); color: #fff; }
 
     /* Absen action card */
     .absen-cards-wrap {
@@ -3705,6 +3707,38 @@
 	  </div>
 	</div>
 	
+	<!-- MODAL: EDIT PENGUMUMAN -->
+	<div class="modal-overlay" id="modal-edit-pengumuman">
+	  <div class="modal-sheet">
+		<div class="modal-handle"></div>
+		<div class="modal-header">
+		  <div class="modal-title">Edit Pengumuman</div>
+		  <button class="modal-close" id="close-modal-edit-pengumuman">
+			<span class="material-symbols-rounded">close</span>
+		  </button>
+		</div>
+		<div class="modal-body">
+		  <input type="hidden" id="edit-pengumuman-id" />
+		  <div class="form-group">
+			<label class="form-label">Judul</label>
+			<div class="input-wrap">
+			  <span class="material-symbols-rounded input-icon">title</span>
+			  <input type="text" id="edit-pengumuman-judul" placeholder="Judul pengumuman..." />
+			</div>
+		  </div>
+		  <div class="form-group" style="margin-top:12px;">
+			<label class="form-label">Isi Pengumuman</label>
+			<div class="input-wrap">
+			  <textarea id="edit-pengumuman-konten" placeholder="Tulis isi pengumuman..." style="height:120px;"></textarea>
+			</div>
+		  </div>
+		  <button class="btn-primary" id="btn-simpan-edit-pengumuman" style="margin-top:14px;">
+			<span class="material-symbols-rounded">save</span> Simpan Perubahan
+		  </button>
+		</div>
+	  </div>
+	</div>
+
 	<!-- Input file tersembunyi untuk foto profil -->
 	<input type="file" id="input-foto-profil" accept="image/jpeg,image/png" style="display:none;" />
 	
@@ -4653,8 +4687,10 @@ async function renderBeranda() {
    ============================================================ */
 async function muatRekapBulanIni() {
   const now   = new Date();
-  const awal  = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-  const akhir = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+  const thn   = now.getFullYear();
+  const bln   = now.getMonth() + 1; // 1-12
+  const awal  = `${thn}-${String(bln).padStart(2,'0')}-01`;
+  const akhir = `${thn}-${String(bln).padStart(2,'0')}-${String(hariTerakhirBulan(thn, bln)).padStart(2,'0')}`;
 
   const { data, error } = await sb
     .from('presensi')
@@ -4757,7 +4793,52 @@ async function muatPresensiHariIni() {
       : `Tidak wajib absen — ${APP.statusWajibAbsen.alasan}`;
   }
 
+  // Update sub-teks kartu masuk & pulang dengan jam acuan yang benar
+  updateSubKartuAbsen();
+
   renderStatusAbsen(data);
+}
+
+/**
+ * Mengisi teks kecil di bawah "Absen Masuk" dan "Absen Pulang"
+ * dengan jam acuan yang sesuai per orang:
+ * - Punya jadwal pribadi hari ini → jam personal dari jadwal_mengajar
+ * - Tipe global / tidak ada jadwal → fallback ke jam sekolah
+ * Fungsi ini HANYA menyentuh elemen .absen-card-type-sub, tidak ada lainnya.
+ */
+function updateSubKartuAbsen() {
+  const subMasukEls  = document.querySelectorAll('.absen-card-type-icon.masuk')  ;
+  const subPulangEls = document.querySelectorAll('.absen-card-type-icon.pulang') ;
+
+  // Ambil elemen sub dari header kartu masuk & pulang
+  const subMasuk  = subMasukEls[0]?.closest('.absen-action-card')
+                      ?.querySelector('.absen-card-type-sub');
+  const subPulang = subPulangEls[0]?.closest('.absen-action-card')
+                      ?.querySelector('.absen-card-type-sub');
+
+  if (!subMasuk && !subPulang) return;
+
+  // Jam jadwal personal hari ini (ada jika tipe_kehadiran='jadwal' & ada jadwal)
+  const jadwalHariIni = APP.statusWajibAbsen?.jadwal;
+  const jamMasukGlobal  = APP.sekolah?.jam_masuk_global  || '07:00';
+  const jamPulangGlobal = APP.sekolah?.jam_pulang_global || '15:30';
+
+  let labelMasuk, labelPulang;
+
+  if (jadwalHariIni?.jam_mulai) {
+    // Punya jadwal pribadi — tampilkan jam personal
+    const jMulai   = jadwalHariIni.jam_mulai.slice(0, 5);
+    const jSelesai = jadwalHariIni.jam_selesai?.slice(0, 5) || jamPulangGlobal;
+    labelMasuk  = `Jam ${jMulai} (Jadwal Pribadi)`;
+    labelPulang = `Jam ${jSelesai} (Jadwal Pribadi)`;
+  } else {
+    // Tipe global atau tidak ada jadwal hari ini → pakai jam sekolah
+    labelMasuk  = `Jam ${jamMasukGlobal} (Jam Sekolah)`;
+    labelPulang = `Jam ${jamPulangGlobal} (Jam Sekolah)`;
+  }
+
+  if (subMasuk)  subMasuk.textContent  = labelMasuk;
+  if (subPulang) subPulang.textContent = labelPulang;
 }
 
 function renderStatusAbsen(absen) {
@@ -4796,22 +4877,63 @@ function renderStatusAbsen(absen) {
 
   if (statusEl) statusEl.textContent = absen.status_kehadiran || 'Hadir';
   if (waktuEl)  waktuEl.textContent  = `Masuk ${waktuMasukStr || '-'} · ${waktuPulangStr ? 'Pulang ' + waktuPulangStr : 'Belum pulang'}`;
-  if (badgeEl)  badgeEl.textContent  = absen.status_kehadiran === 'Terlambat' ? 'Terlambat' : 'Tepat Waktu';
+
+  // Badge hero: kalau sudah pulang, tampilkan status pulang (info terbaru).
+  // Kalau belum pulang, tampilkan status masuk.
+  if (badgeEl) {
+    if (absen.waktu_pulang && absen.status_pulang) {
+      badgeEl.textContent = absen.status_pulang;
+    } else {
+      badgeEl.textContent = absen.status_kehadiran === 'Terlambat' ? 'Terlambat' : 'Tepat Waktu';
+    }
+  }
 
   // Status pills di halaman absen
   if (absen.waktu_masuk && absen.waktu_pulang) {
-    updateStatusPillsAbsen('lengkap');
+    updateStatusPillsAbsen('lengkap', absen);
   } else if (absen.waktu_masuk) {
-    updateStatusPillsAbsen('sudah-masuk');
+    updateStatusPillsAbsen('sudah-masuk', absen);
   } else {
-    updateStatusPillsAbsen('belum');
+    updateStatusPillsAbsen('belum', absen);
   }
 
   // Tampilkan / sembunyikan tombol absen
   renderTombolAbsen(absen);
 }
 
-function updateStatusPillsAbsen(status) {
+/**
+ * Pill tambahan terpisah untuk status keterlambatan/pulang cepat,
+ * ditampilkan BERSAMA pill "Sudah Absen Masuk" / "Sudah Pulang" yang
+ * sudah ada (tidak menggantikan, hanya menambah info).
+ */
+function pillStatusMasukTambahan(absen) {
+  if (!absen || !absen.waktu_masuk) return '';
+  if (absen.status_kehadiran === 'Terlambat') {
+    return `<div class="status-pill terlambat">
+        <span class="material-symbols-rounded">schedule</span> Terlambat
+      </div>`;
+  }
+  return `<div class="status-pill hadir">
+      <span class="material-symbols-rounded">verified</span> Tepat Waktu
+    </div>`;
+}
+
+function pillStatusPulangTambahan(absen) {
+  if (!absen || !absen.waktu_pulang) return '';
+  if (absen.status_pulang === 'Pulang Cepat') {
+    return `<div class="status-pill pulang-cepat">
+        <span class="material-symbols-rounded">directions_run</span> Pulang Cepat
+      </div>`;
+  }
+  if (absen.status_pulang === 'Pulang Tepat Waktu') {
+    return `<div class="status-pill pulang-tepat-waktu">
+        <span class="material-symbols-rounded">verified</span> Pulang Tepat Waktu
+      </div>`;
+  }
+  return ''; // status_pulang NULL (absen sukarela tanpa jam acuan) -> tidak perlu pill tambahan
+}
+
+function updateStatusPillsAbsen(status, absen) {
   const row = document.querySelector('.absen-status-row');
   if (!row) return;
 
@@ -4828,6 +4950,7 @@ function updateStatusPillsAbsen(status) {
       <div class="status-pill hadir">
         <span class="material-symbols-rounded">check_circle</span> Sudah Absen Masuk
       </div>
+      ${pillStatusMasukTambahan(absen)}
       <div class="status-pill belum">
         <span class="material-symbols-rounded">radio_button_unchecked</span> Belum Pulang
       </div>`,
@@ -4835,9 +4958,11 @@ function updateStatusPillsAbsen(status) {
       <div class="status-pill hadir">
         <span class="material-symbols-rounded">check_circle</span> Sudah Absen Masuk
       </div>
+      ${pillStatusMasukTambahan(absen)}
       <div class="status-pill pulang">
         <span class="material-symbols-rounded">logout</span> Sudah Pulang
-      </div>`,
+      </div>
+      ${pillStatusPulangTambahan(absen)}`,
   };
 
   row.innerHTML = templateMap[status] || templateMap['belum'];
@@ -4935,6 +5060,9 @@ function renderTombolAbsen(absen) {
             <div style="font-size:14px;font-weight:700;color:var(--success-600);">Absen Masuk Berhasil</div>
             <div style="font-size:12px;color:var(--gray-500);">Dicatat pada ${waktuStr} Wita</div>
           </div>
+          ${absen.status_kehadiran === 'Terlambat'
+            ? `<div class="absen-status-chip" style="margin-left:auto;background:var(--warning-500);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:var(--radius-full);white-space:nowrap;">Terlambat</div>`
+            : `<div class="absen-status-chip" style="margin-left:auto;background:var(--success-500);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:var(--radius-full);white-space:nowrap;">Tepat Waktu</div>`}
         </div>`;
     }
     if (badgeMasuk) { badgeMasuk.className = 'absen-card-type-badge done'; badgeMasuk.textContent = '✓ Selesai'; }
@@ -4958,6 +5086,11 @@ function renderTombolAbsen(absen) {
               <div style="font-size:14px;font-weight:700;color:var(--info-500);">Absen Pulang Berhasil</div>
               <div style="font-size:12px;color:var(--gray-500);">Dicatat pada ${waktuPulangStr} Wita</div>
             </div>
+            ${absen.status_pulang === 'Pulang Cepat'
+              ? `<div class="absen-status-chip" style="margin-left:auto;background:var(--warning-500);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:var(--radius-full);white-space:nowrap;">Pulang Cepat</div>`
+              : absen.status_pulang === 'Pulang Tepat Waktu'
+                ? `<div class="absen-status-chip" style="margin-left:auto;background:var(--info-500);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:var(--radius-full);white-space:nowrap;">Tepat Waktu</div>`
+                : ''}
           </div>`;
       }
       if (badgePulang) { badgePulang.className = 'absen-card-type-badge done'; badgePulang.textContent = '✓ Selesai'; }
@@ -5359,8 +5492,11 @@ function initTabIzinListeners() {
 }
 
 function resetFormIzin() {
-  // Set tanggal default hari ini
-  const hari = new Date().toISOString().slice(0, 10);
+  // Set tanggal default hari ini (WITA, BUKAN toISOString() yang
+  // mengonversi ke UTC — kalau diisi jam 00:00-07:59 WITA, toISOString()
+  // akan mundur ke tanggal kemarin karena WITA = UTC+8).
+  const hari = new Date().toLocaleDateString('id-ID', { timeZone: 'Asia/Makassar' })
+    .split('/').reverse().join('-'); // dd/mm/yyyy -> yyyy-mm-dd
   const dariEl   = document.getElementById('izin-dari');
   const sampaiEl = document.getElementById('izin-sampai');
   if (dariEl)   dariEl.value   = hari;
@@ -5814,10 +5950,25 @@ async function muatPengumuman() {
     return;
   }
 
+  const isAdminOrKepsek = ['admin', 'kepsek'].includes(APP.profile?.role);
+
   list.innerHTML = data.map(item => {
     const role    = item.profiles?.role || 'default';
     const penanda = item.profiles?.nama || 'Admin';
     const tgl     = new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+    const tombolAksi = isAdminOrKepsek ? `
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <button class="btn-edit-pengumuman" data-id="${item.id}"
+          data-judul="${escapeHTML(item.judul)}"
+          data-konten="${escapeHTML(item.konten || '')}"
+          style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--primary-600);background:var(--primary-50);border:none;border-radius:var(--radius-sm);padding:4px 10px;cursor:pointer;">
+          <span class="material-symbols-rounded" style="font-size:15px;">edit</span> Edit
+        </button>
+        <button class="btn-hapus-pengumuman" data-id="${item.id}"
+          style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--danger-600);background:var(--danger-50);border:none;border-radius:var(--radius-sm);padding:4px 10px;cursor:pointer;">
+          <span class="material-symbols-rounded" style="font-size:15px;">delete</span> Hapus
+        </button>
+      </div>` : '';
     return `
       <div class="pengumuman-item">
         <div class="pengumuman-icon-wrap ${clsMap[role] || 'blue'}">
@@ -5828,9 +5979,53 @@ async function muatPengumuman() {
           <div class="pengumuman-excerpt">${escapeHTML(item.konten || '')}</div>
           <div class="pengumuman-meta">${escapeHTML(penanda)} · ${tgl}</div>
           ${item.file_lampiran ? `<a href="https://drive.google.com/file/d/${item.file_lampiran}/view" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--primary-600);margin-top:6px;text-decoration:none;"><span class="material-symbols-rounded" style="font-size:16px;">attach_file</span> Lihat Lampiran</a>` : ''}
+          ${tombolAksi}
         </div>
       </div>`;
   }).join('');
+
+  // Pasang event listener tombol hapus & edit
+  list.querySelectorAll('.btn-hapus-pengumuman').forEach(btn => {
+    btn.addEventListener('click', () => hapusPengumuman(btn.dataset.id));
+  });
+  list.querySelectorAll('.btn-edit-pengumuman').forEach(btn => {
+    btn.addEventListener('click', () => bukaEditPengumuman(btn.dataset.id, btn.dataset.judul, btn.dataset.konten));
+  });
+}
+
+async function hapusPengumuman(id) {
+  if (!confirm('Yakin ingin menghapus pengumuman ini?')) return;
+  const { error } = await sb.from('pengumuman').delete().eq('id', id);
+  if (error) { toast('Gagal menghapus: ' + error.message, 'error'); return; }
+  toast('✅ Pengumuman berhasil dihapus', 'success');
+  await muatPengumuman();
+}
+
+function bukaEditPengumuman(id, judul, konten) {
+  document.getElementById('edit-pengumuman-id').value    = id;
+  document.getElementById('edit-pengumuman-judul').value  = judul;
+  document.getElementById('edit-pengumuman-konten').value = konten;
+  bukaModal('modal-edit-pengumuman');
+}
+
+async function simpanEditPengumuman() {
+  const id     = document.getElementById('edit-pengumuman-id')?.value;
+  const judul  = document.getElementById('edit-pengumuman-judul')?.value.trim();
+  const konten = document.getElementById('edit-pengumuman-konten')?.value.trim();
+  const btn    = document.getElementById('btn-simpan-edit-pengumuman');
+
+  if (!judul)  { toast('Judul tidak boleh kosong', 'warning'); return; }
+  if (!konten) { toast('Isi pengumuman tidak boleh kosong', 'warning'); return; }
+
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="material-symbols-rounded">hourglass_top</span> Menyimpan...'; }
+  const { error } = await sb.from('pengumuman').update({ judul, konten }).eq('id', id);
+  if (btn) { btn.disabled = false; btn.innerHTML = '<span class="material-symbols-rounded">save</span> Simpan Perubahan'; }
+
+  if (error) { toast('Gagal menyimpan: ' + error.message, 'error'); return; }
+
+  toast('✅ Pengumuman berhasil diperbarui', 'success');
+  tutupModal('modal-edit-pengumuman');
+  await muatPengumuman();
 }
 
 async function kirimPengumuman() {
@@ -7149,6 +7344,10 @@ function initModals() {
   document.getElementById('close-modal-pengumuman')?.addEventListener('click', () => tutupModal('modal-buat-pengumuman'));
   document.getElementById('btn-kirim-pengumuman')?.addEventListener('click', kirimPengumuman);
 
+  // Modal edit pengumuman
+  document.getElementById('close-modal-edit-pengumuman')?.addEventListener('click', () => tutupModal('modal-edit-pengumuman'));
+  document.getElementById('btn-simpan-edit-pengumuman')?.addEventListener('click', simpanEditPengumuman);
+
   // Ganti foto profil
   document.getElementById('btn-ganti-foto-profil')?.addEventListener('click', () => {
     document.getElementById('input-foto-profil')?.click();
@@ -7394,7 +7593,34 @@ async function muatLaporan() {
   }
 }
 let _laporanListenersSiap = false;
- 
+
+/**
+ * Hitung tanggal terakhir suatu bulan, TANPA lewat konversi UTC
+ * (new Date(...).toISOString() berbahaya untuk ini — toISOString()
+ * selalu mengonversi ke UTC, dan karena WITA = UTC+8, tanggal 00:00
+ * WITA bisa "mundur" jadi hari sebelumnya di UTC, sehingga laporan
+ * bulanan kehilangan tanggal terakhirnya / bergeser maju-mundur 1 hari).
+ * Dihitung manual lewat angka kalender saja, tidak ada objek Date
+ * yang melibatkan timezone sama sekali.
+ */
+function hariTerakhirBulan(thn, bln) {
+  // Jumlah hari per bulan, indeks 1-12. Cek tahun kabisat untuk Februari.
+  const kabisat = (thn % 4 === 0 && thn % 100 !== 0) || (thn % 400 === 0);
+  const hariPerBulan = [31, kabisat ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return hariPerBulan[bln - 1];
+}
+
+/**
+ * "YYYY-MM" untuk hari ini, dihitung dari tanggal WITA (bukan UTC),
+ * dipakai untuk nama file unduhan supaya tidak mundur 1 bulan kalau
+ * diunduh jam 00:00-07:59 WITA di tanggal 1.
+ */
+function namaFileBulanIni() {
+  const hariWita = new Date().toLocaleDateString('id-ID', { timeZone: 'Asia/Makassar' })
+    .split('/').reverse().join('-'); // dd/mm/yyyy -> yyyy-mm-dd
+  return hariWita.slice(0, 7); // yyyy-mm
+}
+
 async function fetchLaporanData() {
   const bln = parseInt(document.getElementById('laporan-bulan')?.value);
   const thn = parseInt(document.getElementById('laporan-tahun')?.value);
@@ -7410,7 +7636,7 @@ async function fetchLaporanData() {
     if (_laporanGuruTerpilih) {
       // Mode: admin pilih 1 orang → tampilkan detail individu
       const tglDari   = `${thn}-${String(bln).padStart(2,'0')}-01`;
-      const tglSampai = new Date(thn, bln, 0).toISOString().slice(0, 10);
+      const tglSampai = `${thn}-${String(bln).padStart(2,'0')}-${String(hariTerakhirBulan(thn, bln)).padStart(2,'0')}`;
       const { data, error } = await sb.rpc('laporan_detail_guru', {
         target_guru_id: _laporanGuruTerpilih.id,
         tgl_dari: tglDari,
@@ -7436,7 +7662,7 @@ async function fetchLaporanData() {
     // Mode pribadi: pakai RPC laporan_detail_guru yang sudah mengizinkan
     // guru melihat datanya sendiri (auth.uid() = target_guru_id di backend).
     const tglDari   = `${thn}-${String(bln).padStart(2,'0')}-01`;
-    const tglSampai = new Date(thn, bln, 0).toISOString().slice(0, 10); // hari terakhir bulan itu
+    const tglSampai = `${thn}-${String(bln).padStart(2,'0')}-${String(hariTerakhirBulan(thn, bln)).padStart(2,'0')}`; // hari terakhir bulan itu
 
     const { data, error } = await sb.rpc('laporan_detail_guru', {
       target_guru_id: APP.user.id,
@@ -7583,7 +7809,17 @@ function renderLaporanPribadi(guruInfo) {
     const warnaStatus = {
       'Hadir': 'var(--success-600)', 'Terlambat': 'var(--warning-600)',
       'Sakit': 'var(--info-500)', 'Izin': 'var(--primary-600)',
+      'Belum Absen': 'var(--gray-600)',
     }[r.status_kehadiran] || 'var(--gray-600)';
+    // Status Masuk: badge terpisah, sejajar dengan Status Pulang di bawahnya.
+    // Hanya tampil kalau memang ada waktu_masuk hari itu (sama seperti
+    // pillStatusMasukTambahan() di halaman Absen) — bukan menggantikan
+    // badge status_kehadiran di atas, hanya melengkapi.
+    const statusMasukLabel = r.waktu_masuk
+      ? (r.status_kehadiran === 'Terlambat' ? 'Terlambat' : (r.status_kehadiran === 'Hadir' ? 'Tepat Waktu' : null))
+      : null;
+    const warnaMasuk  = statusMasukLabel === 'Terlambat' ? 'var(--warning-600)' : 'var(--success-600)';
+    const warnaPulang = r.status_pulang === 'Pulang Cepat' ? 'var(--warning-600)' : 'var(--info-500)';
     const jamMasuk  = r.waktu_masuk  ? new Date(r.waktu_masuk).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', hour12:false }) : '-';
     const jamPulang = r.waktu_pulang ? new Date(r.waktu_pulang).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', hour12:false }) : '-';
     return `
@@ -7592,7 +7828,11 @@ function renderLaporanPribadi(guruInfo) {
           <div style="font-weight:600;font-size:13px;">${new Date(r.tanggal + 'T00:00:00').toLocaleDateString('id-ID', { weekday:'short', day:'numeric', month:'short' })}</div>
           <div style="font-size:11px;color:var(--gray-500);">Masuk ${jamMasuk} · Pulang ${jamPulang}</div>
         </div>
-        <span style="font-size:11px;font-weight:700;color:${warnaStatus};background:${warnaStatus}15;padding:4px 10px;border-radius:var(--radius-full);">${escapeHTML(r.status_kehadiran || '-')}</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <span style="font-size:11px;font-weight:700;color:${warnaStatus};background:${warnaStatus}15;padding:4px 10px;border-radius:var(--radius-full);white-space:nowrap;">${escapeHTML(r.status_kehadiran || '-')}</span>
+          ${statusMasukLabel ? `<span style="font-size:11px;font-weight:700;color:${warnaMasuk};background:${warnaMasuk}15;padding:4px 10px;border-radius:var(--radius-full);white-space:nowrap;">${escapeHTML(statusMasukLabel)}</span>` : ''}
+          ${r.status_pulang ? `<span style="font-size:11px;font-weight:700;color:${warnaPulang};background:${warnaPulang}15;padding:4px 10px;border-radius:var(--radius-full);white-space:nowrap;">${escapeHTML(r.status_pulang)}</span>` : ''}
+        </div>
       </div>`;
   }).join('');
 
@@ -7603,17 +7843,22 @@ function exportLaporanCSV() {
   if (!_laporanModeAdmin) {
     const data = _laporanData.detailPribadi || [];
     if (!data.length) { toast('Muat data laporan terlebih dahulu', 'warning'); return; }
-    const headers = ['Tanggal','Status','Jenis Absen','Waktu Masuk','Waktu Pulang','Lokasi Masuk','Lokasi Pulang'];
-    const rows = data.map(r => [
-      r.tanggal, r.status_kehadiran, r.jenis_absen,
-      r.waktu_masuk ? new Date(r.waktu_masuk).toLocaleTimeString('id-ID') : '',
-      r.waktu_pulang ? new Date(r.waktu_pulang).toLocaleTimeString('id-ID') : '',
-      r.status_lokasi_masuk, r.status_lokasi_pulang,
-    ].map(v => `"${(v??'').toString().replace(/"/g,'""')}"`).join(','));
+    const headers = ['Tanggal','Status','Status Masuk','Status Pulang','Jenis Absen','Waktu Masuk','Waktu Pulang','Lokasi Masuk','Lokasi Pulang'];
+    const rows = data.map(r => {
+      const statusMasuk = r.waktu_masuk
+        ? (r.status_kehadiran === 'Terlambat' ? 'Terlambat' : (r.status_kehadiran === 'Hadir' ? 'Tepat Waktu' : ''))
+        : '';
+      return [
+        r.tanggal, r.status_kehadiran, statusMasuk, r.status_pulang, r.jenis_absen,
+        r.waktu_masuk ? new Date(r.waktu_masuk).toLocaleTimeString('id-ID') : '',
+        r.waktu_pulang ? new Date(r.waktu_pulang).toLocaleTimeString('id-ID') : '',
+        r.status_lokasi_masuk, r.status_lokasi_pulang,
+      ].map(v => `"${(v??'').toString().replace(/"/g,'""')}"`).join(',');
+    });
     const csv = [headers.join(','), ...rows].join('\n');
     const url = URL.createObjectURL(new Blob(['\uFEFF'+csv], { type: 'text/csv;charset=utf-8;' }));
     const a = document.createElement('a');
-    a.href = url; a.download = `laporan_saya_${new Date().toISOString().slice(0,7)}.csv`;
+    a.href = url; a.download = `laporan_saya_${namaFileBulanIni()}.csv`;
     a.click(); URL.revokeObjectURL(url);
     toast('✅ File CSV berhasil diunduh', 'success');
     return;
@@ -7629,7 +7874,7 @@ function exportLaporanCSV() {
   const csv = [headers.join(','), ...rows].join('\n');
   const url = URL.createObjectURL(new Blob(['\uFEFF'+csv], { type: 'text/csv;charset=utf-8;' }));
   const a = document.createElement('a');
-  a.href = url; a.download = `laporan_presensi_${new Date().toISOString().slice(0,7)}.csv`;
+  a.href = url; a.download = `laporan_presensi_${namaFileBulanIni()}.csv`;
   a.click(); URL.revokeObjectURL(url);
   toast('✅ File CSV berhasil diunduh', 'success');
 }
@@ -7951,166 +8196,188 @@ async function cetakPDFLaporan() {
   }
 
   // ══════════════════════════════════════════════════════════════════════
-  //  PDF JENIS 2: LAPORAN PER GURU
-  // ══════════════════════════════════════════════════════════════════════
-  if (_laporanGuruTerpilih) {
-    const guru   = _laporanGuruTerpilih;
-    const detail = _laporanData.detailPribadi || [];
+	//  PDF JENIS 2: LAPORAN PER GURU
+	// ══════════════════════════════════════════════════════════════════════
+	if (_laporanGuruTerpilih) {
+	  const guru   = _laporanGuruTerpilih;
+	  const detail = _laporanData.detailPribadi || [];
 
-    const hadir     = detail.filter(r => r.status_kehadiran === 'Hadir').length;
-    const terlambat = detail.filter(r => r.status_kehadiran === 'Terlambat').length;
-    const sakit     = detail.filter(r => r.status_kehadiran === 'Sakit').length;
-    const izin      = detail.filter(r => r.status_kehadiran === 'Izin').length;
-    const alfa      = detail.filter(r => r.status_kehadiran === 'Alfa').length;
-    const total     = detail.length;
+	  const hadir     = detail.filter(r => r.status_kehadiran === 'Hadir').length;
+	  const terlambat = detail.filter(r => r.status_kehadiran === 'Terlambat').length;
+	  const sakit     = detail.filter(r => r.status_kehadiran === 'Sakit').length;
+	  const izin      = detail.filter(r => r.status_kehadiran === 'Izin').length;
+	  const alfa      = detail.filter(r => r.status_kehadiran === 'Alfa').length;
+	  const total     = detail.length;
 
-    let y = await gambarKop(doc, 10);
+	  let y = await gambarKop(doc, 10);
+	  y += 6; // ← jarak tambahan supaya judul tidak mepet/tertutup kop
 
-    // ── Judul laporan ──────────────────────────────────────────────────
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.setTextColor(...C_BIRU);
-    doc.text('LAPORAN KEHADIRAN INDIVIDU', W / 2, y, { align: 'center' });
-    y += 5.5;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(11);
-    doc.setTextColor(...C_ABU);
-    doc.text(`Bulan ${bulanLabel} ${thn}`, W / 2, y, { align: 'center' });
-    y += 7;
+	  // ── Judul laporan ──────────────────────────────────────────────────
+	  doc.setFont('helvetica', 'bold');
+	  doc.setFontSize(12);
+	  doc.setTextColor(...C_BIRU);
+	  doc.text('LAPORAN KEHADIRAN INDIVIDU', W / 2, y, { align: 'center' });
+	  y += 5.5;
+	  doc.setFont('helvetica', 'normal');
+	  doc.setFontSize(10);
+	  doc.setTextColor(...C_HITAM);
+	  doc.text(`Bulan ${bulanLabel} ${thn}`, W / 2, y, { align: 'center' });
+	  y += 8;
 
-    // ── Identitas guru (manual — titik dua rata) ───────────────────────
-    const identRows = [
-      ['Nama',            guru.nama || '—'],
-      ['NIP',             guru.nip  || '—'],
-      ['Jabatan / Mapel', guru.mapel || guru.pangkat || '—'],
-      ['Tipe Kehadiran',  guru.tipe_kehadiran || 'Global'],
-    ];
-    const IDENT_KEY_W = 38; // lebar kolom kiri (label)
-    const IDENT_VAL_X = ML + IDENT_KEY_W + 4; // posisi X titik dua & nilai
-    doc.setFontSize(11); doc.setFont('helvetica', 'normal');
-    identRows.forEach(([key, val]) => {
-      doc.setTextColor(...C_HITAM);
-      doc.setFont('helvetica', 'bold');
-      doc.text(key, ML, y);
-      doc.setFont('helvetica', 'normal');
-      doc.text(': ' + val, IDENT_VAL_X, y);
-      y += 6;
-    });
-    y += 3;
+	  // ── Identitas guru ─────────────────────────────────────────────────
+	  const identRows = [
+		['Nama',            guru.nama || '—'],
+		['NIP',             guru.nip  || '—'],
+		['Jabatan / Mapel', guru.mapel || guru.pangkat || '—'],
+		['Tipe Kehadiran',  guru.tipe_kehadiran === 'jadwal' ? 'Sesuai Jadwal Mengajar' : 'Global (Jam Sekolah)'],
+	  ];
+	  const IDENT_KEY_W = 38;
+	  const IDENT_VAL_X = ML + IDENT_KEY_W + 4;
+	  doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+	  identRows.forEach(([key, val]) => {
+		doc.setTextColor(...C_HITAM);
+		doc.setFont('helvetica', 'bold');
+		doc.text(key, ML, y);
+		doc.setFont('helvetica', 'normal');
+		doc.text(': ' + val, IDENT_VAL_X, y);
+		y += 5.5;
+	  });
+	  y += 4;
 
-    // ── Kotak ringkasan statistik ──────────────────────────────────────
-    const statItems = [
-      { label: 'HADIR',     val: hadir,     fg: C_HIJAU, bg: [232,245,233] },
-      { label: 'TERLAMBAT', val: terlambat, fg: C_ORNG,  bg: [255,243,224] },
-      { label: 'SAKIT',     val: sakit,     fg: C_UNGU,  bg: [232,234,246] },
-      { label: 'IZIN',      val: izin,      fg: C_BIRU,  bg: [227,242,253] },
-      { label: 'ALFA',      val: alfa,      fg: C_MERAH, bg: [255,235,238] },
-    ];
-    const boxW = (CW - 4) / 5;
-    statItems.forEach(({ label, val, fg, bg }, i) => {
-      const bx = ML + i * (boxW + 1);
-      doc.setFillColor(...bg);
-      doc.roundedRect(bx, y, boxW, 16, 2, 2, 'F');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(15);
-      doc.setTextColor(...fg);
-      doc.text(String(val), bx + boxW / 2, y + 8.5, { align: 'center' });
-      doc.setFontSize(6.5);
-      doc.text(label, bx + boxW / 2, y + 13.5, { align: 'center' });
-    });
-    y += 20;
+	  // ── Kotak ringkasan statistik ──────────────────────────────────────
+	  const statItems = [
+		{ label: 'HADIR',     val: hadir,     fg: C_HIJAU, bg: [232,245,233] },
+		{ label: 'TERLAMBAT', val: terlambat, fg: C_ORNG,  bg: [255,243,224] },
+		{ label: 'SAKIT',     val: sakit,     fg: C_UNGU,  bg: [232,234,246] },
+		{ label: 'IZIN',      val: izin,      fg: C_BIRU,  bg: [227,242,253] },
+		{ label: 'ALFA',      val: alfa,      fg: C_MERAH, bg: [255,235,238] },
+	  ];
+	  const boxW = (CW - 4) / 5;
+	  statItems.forEach(({ label, val, fg, bg }, i) => {
+		const bx = ML + i * (boxW + 1);
+		doc.setFillColor(...bg);
+		doc.roundedRect(bx, y, boxW, 15, 2, 2, 'F');
+		doc.setFont('helvetica', 'bold');
+		doc.setFontSize(13);
+		doc.setTextColor(...fg);
+		doc.text(String(val), bx + boxW / 2, y + 7.5, { align: 'center' });
+		doc.setFontSize(6);
+		doc.text(label, bx + boxW / 2, y + 12, { align: 'center' });
+	  });
+	  y += 19;
 
-    // ── Tabel detail harian ────────────────────────────────────────────
-    const statusWarna = s => ({
-      'Hadir':            C_HIJAU,
-      'Terlambat':        C_ORNG,
-      'Sakit':            C_UNGU,
-      'Izin':             C_BIRU,
-      'Alfa':             C_MERAH,
-      'Libur':            C_ABU,
-      'Tidak Ada Jadwal': C_ABU,
-    }[s] || [80, 80, 80]);
+	  // ── Tabel detail harian ────────────────────────────────────────────
+	  const statusWarna = s => ({
+		'Hadir':            C_HIJAU,
+		'Terlambat':        C_ORNG,
+		'Sakit':            C_UNGU,
+		'Izin':             C_BIRU,
+		'Alfa':             C_MERAH,
+		'Libur':            C_ABU,
+		'Tidak Ada Jadwal': C_ABU,
+		'Belum Absen':      C_ABU,
+	  }[s] || [80, 80, 80]);
 
-    const tableRows = detail.map(r => {
-      const tgl = new Date(r.tanggal + 'T00:00:00')
-        .toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-      const jM = r.waktu_masuk
-        ? new Date(r.waktu_masuk).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false })
-        : '—';
-      const jP = r.waktu_pulang
-        ? new Date(r.waktu_pulang).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false })
-        : '—';
-      const ket = r.keterangan || '';
-      return [tgl, r.status_kehadiran || '—', jM, jP, ket];
-    });
+	  const statusMasukWarna = s => ({
+		'Terlambat':   C_ORNG,
+		'Tepat Waktu': C_HIJAU,
+	  }[s] || [80, 80, 80]);
 
-    doc.autoTable({
-      startY: y,
-      head: [['Tanggal', 'Status', 'Jam Masuk', 'Jam Pulang', 'Keterangan']],
-      body: tableRows,
-      margin: { left: ML, right: MR },
-      styles: {
-        fontSize: 11, cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 },
-        valign: 'middle', font: 'helvetica', halign: 'center',
-        lineColor: [17, 17, 17], lineWidth: 0.3,
-      },
-      headStyles: {
-        fillColor: [230, 230, 230], textColor: [17, 17, 17],
-        fontStyle: 'bold', fontSize: 11, halign: 'center',
-        lineColor: [17, 17, 17], lineWidth: 0.3,
-      },
-      alternateRowStyles: { fillColor: [248, 249, 252] },
-      columnStyles: {
-        0: { cellWidth: 50, halign: 'center' },
-        1: { cellWidth: 28, fontStyle: 'bold', halign: 'center' },
-        2: { cellWidth: 24, halign: 'center' },
-        3: { cellWidth: 24, halign: 'center' },
-        4: { cellWidth: 'auto', halign: 'center' },
-      },
-      didDrawCell(data) {
-        if (data.section === 'body' && data.column.index === 1) {
-          data.cell.styles.textColor = statusWarna(data.cell.raw);
-        }
-      },
-    });
+	  const statusPulangWarna = s => ({
+		'Pulang Cepat':       C_ORNG,
+		'Pulang Tepat Waktu': C_BIRU,
+	  }[s] || [80, 80, 80]);
 
-    y = doc.lastAutoTable.finalY + 12;
+	  const tableRows = detail.map(r => {
+		const tgl = new Date(r.tanggal + 'T00:00:00')
+		  .toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+		const jM = r.waktu_masuk
+		  ? new Date(r.waktu_masuk).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false })
+		  : '—';
+		const jP = r.waktu_pulang
+		  ? new Date(r.waktu_pulang).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false })
+		  : '—';
+		const statusMasuk = r.waktu_masuk
+		  ? (r.status_kehadiran === 'Terlambat' ? 'Terlambat' : (r.status_kehadiran === 'Hadir' ? 'Tepat Waktu' : '—'))
+		  : '—';
+		const ket = r.keterangan || '';
+		return [tgl, r.status_kehadiran || '—', statusMasuk, jM, jP, r.status_pulang || '—', ket];
+	  });
 
-    // ── Tanda tangan per guru: KIRI = Kepsek, KANAN = Guru ────────────
-    if (y > 248) { doc.addPage(); y = 20; }
+	  doc.autoTable({
+		startY: y,
+		head: [['Tanggal', 'Status', 'Std Masuk', 'Jam Masuk', 'Jam Pulang', 'Std Pulang', 'Keterangan']],
+		body: tableRows,
+		margin: { left: ML, right: MR },
+		styles: {
+		  fontSize: 8,
+		  cellPadding: { top: 2, bottom: 2, left: 2.5, right: 2.5 },
+		  valign: 'middle',
+		  font: 'helvetica',
+		  halign: 'center',
+		  lineColor: [180, 180, 180],
+		  lineWidth: 0.25,
+		},
+		headStyles: {
+		  fillColor: [30, 136, 229],
+		  textColor: [255, 255, 255],
+		  fontStyle: 'bold',
+		  fontSize: 8,
+		  halign: 'center',
+		  lineColor: [30, 136, 229],
+		  lineWidth: 0.25,
+		},
+		alternateRowStyles: { fillColor: [248, 249, 252] },
+		columnStyles: {
+		  0: { cellWidth: 38, halign: 'center'   }, // Tanggal — pakai 'short' supaya muat
+		  1: { cellWidth: 30, fontStyle: 'bold' }, // Status kehadiran
+		  2: { cellWidth: 22, fontStyle: 'bold' }, // Status masuk
+		  3: { cellWidth: 16                    }, // Jam masuk
+		  4: { cellWidth: 16                    }, // Jam pulang
+		  5: { cellWidth: 28, fontStyle: 'bold' }, // Status pulang  (muat "Pulang Tepat Waktu")
+		  6: { cellWidth: 30, halign: 'left'   }, // Keterangan — sisa = 180-38-22-22-16-16-28 = 38
+		},
+		didDrawCell(data) {
+		  if (data.section !== 'body') return;
+		  if (data.column.index === 1) data.cell.styles.textColor = statusWarna(data.cell.raw);
+		  if (data.column.index === 2) data.cell.styles.textColor = statusMasukWarna(data.cell.raw);
+		  if (data.column.index === 5) data.cell.styles.textColor = statusPulangWarna(data.cell.raw);
+		},
+	  });
 
-    const ttdLebar = (CW - 10) / 2;
-    const ttdKiri  = ML;
-    const ttdKanan = ML + ttdLebar + 10;
-    const CX_KIRI  = ttdKiri  + ttdLebar / 2;
-    const CX_KANAN = ttdKanan + ttdLebar / 2;
+	  y = doc.lastAutoTable.finalY + 14;
 
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(...C_HITAM);
+	  // ── Tanda tangan ───────────────────────────────────────────────────
+	  if (y > 248) { doc.addPage(); y = 20; }
 
-    // Baris 1: Mengetahui, | Makassar, tgl
-    doc.text('Mengetahui,',                CX_KIRI,  y, { align: 'center' });
-    doc.text(`${lokasiTtd}, ${tglTtd}`,   CX_KANAN, y, { align: 'center' });
-    y += 5.5;
+	  const ttdLebar = (CW - 10) / 2;
+	  const ttdKiri  = ML;
+	  const ttdKanan = ML + ttdLebar + 10;
+	  const CX_KIRI  = ttdKiri  + ttdLebar / 2;
+	  const CX_KANAN = ttdKanan + ttdLebar / 2;
 
-    // Baris 2: Kepala Sekolah | Guru Bersangkutan
-    doc.text('Kepala Sekolah',             CX_KIRI,  y, { align: 'center' });
-    doc.text('Guru Bersangkutan',          CX_KANAN, y, { align: 'center' });
-    y += 20; // spasi tanda tangan
+	  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(...C_HITAM);
 
-    // Nama kepsek | Nama guru
-    doc.setFont('helvetica', 'bold');
-    doc.text(kepsekNama || '—', CX_KIRI,  y, { align: 'center' });
-    doc.text(guru.nama  || '—', CX_KANAN, y, { align: 'center' });
-    y += 5.5;
+	  doc.text('Mengetahui,',              CX_KIRI,  y, { align: 'center' });
+	  doc.text(`${lokasiTtd}, ${tglTtd}`, CX_KANAN, y, { align: 'center' });
+	  y += 5.5;
 
-    // NIP kepsek | NIP guru
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(...C_ABU);
-    doc.text('NIP. ' + (kepsekNIP || '—'), CX_KIRI,  y, { align: 'center' });
-    doc.text('NIP. ' + (guru.nip  || '—'), CX_KANAN, y, { align: 'center' });
+	  doc.text('Kepala Sekolah',           CX_KIRI,  y, { align: 'center' });
+	  doc.text('Guru Bersangkutan',        CX_KANAN, y, { align: 'center' });
+	  y += 20;
 
-    _pdfFileName = `Laporan_${(guru.nama||'guru').replace(/\s+/g,'_')}_${bulanLabel}_${thn}.pdf`;
+	  doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+	  doc.text(kepsekNama || '—', CX_KIRI,  y, { align: 'center' });
+	  doc.text(guru.nama  || '—', CX_KANAN, y, { align: 'center' });
+	  y += 5;
 
-  } else {
+	  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...C_ABU);
+	  doc.text('NIP. ' + (kepsekNIP || '—'), CX_KIRI,  y, { align: 'center' });
+	  doc.text('NIP. ' + (guru.nip  || '—'), CX_KANAN, y, { align: 'center' });
+
+	  _pdfFileName = `Laporan_${(guru.nama||'guru').replace(/\s+/g,'_')}_${bulanLabel}_${thn}.pdf`;
+
+	} else {
     // ══════════════════════════════════════════════════════════════════════
     //  PDF JENIS 1: REKAPITULASI SEMUA GURU
     // ══════════════════════════════════════════════════════════════════════
@@ -8126,6 +8393,7 @@ async function cetakPDFLaporan() {
 	  });
 
     let y = await gambarKop(doc, 10);
+	  y += 6; // ← jarak tambahan supaya judul tidak mepet/tertutup kop
 
     // ── Judul ──────────────────────────────────────────────────────────
     doc.setFont('helvetica', 'bold');
