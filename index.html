@@ -15,6 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet" />
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <style>
     /* ============================================================
@@ -231,11 +232,13 @@
       font-weight: 700;
       color: var(--gray-900);
       margin-bottom: 4px;
+      text-align: center;
     }
     .login-card p {
       font-size: 13px;
       color: var(--gray-500);
       margin-bottom: 24px;
+      text-align: center;
     }
 
     .form-group { margin-bottom: 16px; }
@@ -318,7 +321,27 @@
       text-align: center;
       font-size: 12px;
       color: var(--gray-400);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
+    .login-info-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border: none;
+      background: var(--gray-100);
+      color: var(--gray-500);
+      border-radius: 50%;
+      cursor: pointer;
+      flex-shrink: 0;
+      padding: 0;
+    }
+    .login-info-btn .material-symbols-rounded { font-size: 14px; }
+    .login-info-btn:hover { background: var(--primary-50); color: var(--primary-600); }
 
     /* ============================================================
        TOP HEADER (dalam app setelah login)
@@ -634,6 +657,19 @@
       gap: 10px;
       padding: 0 16px;
     }
+    /* Varian 3 kolom — dipakai di kartu ringkasan halaman Laporan Saya
+       (6 kartu: Hadir, Terlambat, Sakit, Izin, Alpa, Hari Kerja) */
+    .stats-grid-3col {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .stats-grid-3col .stat-card { padding: 10px 8px; gap: 5px; }
+    .stats-grid-3col .stat-icon { width: 28px; height: 28px; }
+    .stats-grid-3col .stat-icon .material-symbols-rounded { font-size: 16px; }
+    .stats-grid-3col .stat-value { font-size: 19px; }
+    .stats-grid-3col .stat-label { font-size: 10.5px; line-height: 1.3; }
+    .stat-icon.gray { background: var(--gray-100); color: var(--gray-500); }
+    .stat-card.gray .stat-value { color: var(--gray-700); }
     .stat-card {
       background: var(--surface-card);
       border-radius: var(--radius-lg);
@@ -659,7 +695,47 @@
 
     .stat-trend { font-size: 11px; font-weight: 600; color: var(--success-600); }
     .stat-value { font-size: 26px; font-weight: 800; color: var(--gray-900); line-height: 1; }
+    .stat-card.green  .stat-value { color: var(--success-600); }
+    .stat-card.orange .stat-value { color: var(--warning-600); }
+    .stat-card.blue   .stat-value { color: var(--primary-700); }
+    .stat-card.red    .stat-value { color: var(--danger-600); }
     .stat-label { font-size: 12px; color: var(--gray-500); font-weight: 500; }
+
+    /* Skeleton loading sementara data rekap dimuat */
+    .stat-value.is-loading {
+      color: transparent;
+      background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 37%, var(--gray-100) 63%);
+      background-size: 400% 100%;
+      animation: skeleton-pulse 1.4s ease-in-out infinite;
+      border-radius: var(--radius-sm);
+      display: inline-block;
+      min-width: 28px;
+    }
+    @keyframes skeleton-pulse {
+      0%   { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Badge "Perlu Perhatian" pada kartu Tidak Hadir/Alpa saat nilainya > 0 */
+    .stat-card.has-alert {
+      position: relative;
+      border: 1.5px solid var(--danger-200, #fecaca);
+    }
+    .stat-card-alert-badge {
+      display: none;
+      position: absolute;
+      top: -8px;
+      right: 10px;
+      background: var(--danger-600);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      white-space: nowrap;
+      box-shadow: var(--shadow-xs);
+    }
+    .stat-card.has-alert .stat-card-alert-badge { display: inline-block; }
 
     /* ============================================================
        MENU AKSES CEPAT (Beranda)
@@ -2110,6 +2186,339 @@
     .admin-row-status.alpha    { background: var(--danger-50); color: var(--danger-600); }
 
     /* ============================================================
+       ADMIN DASHBOARD — Ringkasan Sekolah Real-time
+    ============================================================ */
+
+    /* Wrapper utama — tersembunyi untuk non-admin */
+    #admin-dashboard-wrap { display: none; }
+    #admin-dashboard-wrap.visible { display: block; }
+
+    /* ── Status bar: hari ini hari apa + status hari kerja/libur ── */
+    .admin-day-status-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 16px 12px;
+      padding: 10px 14px;
+      background: var(--surface-card);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-xs);
+    }
+    .admin-day-status-icon {
+      width: 32px; height: 32px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .admin-day-status-icon.kerja   { background: var(--success-50); color: var(--success-600); }
+    .admin-day-status-icon.libur   { background: var(--gray-100);   color: var(--gray-500); }
+    .admin-day-status-icon .material-symbols-rounded { font-size: 18px; }
+    .admin-day-status-text { flex: 1; }
+    .admin-day-status-title {
+      font-size: 13px; font-weight: 700; color: var(--gray-900);
+    }
+    .admin-day-status-sub {
+      font-size: 11px; color: var(--gray-500); font-weight: 500;
+    }
+    .admin-day-libur-chip {
+      font-size: 11px; font-weight: 700;
+      padding: 3px 8px; border-radius: var(--radius-full);
+      background: var(--warning-50); color: var(--warning-600);
+    }
+
+    /* ── 5 kartu angka besar ── */
+    .admin-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding: 0 16px;
+      margin-bottom: 8px;
+    }
+    .admin-kpi-card {
+      background: var(--surface-card);
+      border-radius: var(--radius-lg);
+      padding: 12px 14px;
+      box-shadow: var(--shadow-xs);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .admin-kpi-card:active { transform: scale(0.97); }
+    .admin-kpi-card.full-width {
+      grid-column: 1 / -1;
+    }
+    .admin-kpi-top {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 6px;
+    }
+    .admin-kpi-icon {
+      width: 32px; height: 32px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .admin-kpi-icon .material-symbols-rounded { font-size: 18px; }
+    .admin-kpi-icon.blue   { background: var(--primary-50);  color: var(--primary-700); }
+    .admin-kpi-icon.green  { background: var(--success-50);  color: var(--success-600); }
+    .admin-kpi-icon.orange { background: var(--warning-50);  color: var(--warning-600); }
+    .admin-kpi-icon.red    { background: var(--danger-50);   color: var(--danger-600); }
+    .admin-kpi-icon.gray   { background: var(--gray-100);    color: var(--gray-600); }
+    .admin-kpi-value {
+      font-size: 30px; font-weight: 800;
+      color: var(--gray-900); line-height: 1;
+    }
+    .admin-kpi-label {
+      font-size: 11px; color: var(--gray-500);
+      font-weight: 600; margin-top: 2px;
+    }
+    /* Badge "menunggu" di pojok kanan atas kartu */
+    .admin-kpi-badge {
+      position: absolute; top: 10px; right: 10px;
+      background: var(--danger-500); color: #fff;
+      font-size: 10px; font-weight: 800;
+      border-radius: var(--radius-full);
+      min-width: 18px; height: 18px;
+      display: none;
+      align-items: center; justify-content: center;
+      padding: 0 4px;
+    }
+    .admin-kpi-badge.show { display: flex; }
+
+    /* ── Progress bar kehadiran ── */
+    .admin-progress-wrap {
+      margin: 0 16px 12px;
+      background: var(--surface-card);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-xs);
+    }
+    .admin-progress-header {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 10px;
+    }
+    .admin-progress-label {
+      font-size: 13px; font-weight: 700; color: var(--gray-800);
+    }
+    .admin-progress-pct {
+      font-size: 18px; font-weight: 800; color: var(--primary-700);
+    }
+    .admin-progress-track {
+      width: 100%; height: 8px;
+      background: var(--gray-100);
+      border-radius: var(--radius-full); overflow: hidden;
+    }
+    .admin-progress-fill {
+      height: 100%; border-radius: var(--radius-full);
+      background: linear-gradient(90deg, var(--primary-500), var(--success-500));
+      transition: width 0.6s cubic-bezier(.4,0,.2,1);
+    }
+    .admin-progress-sub {
+      font-size: 11px; color: var(--gray-500);
+      font-weight: 500; margin-top: 6px;
+    }
+
+    /* ── Daftar belum absen & terlambat ── */
+    .admin-list-card {
+      background: var(--surface-card);
+      border-radius: var(--radius-xl);
+      margin: 0 16px 10px;
+      overflow: hidden;
+      box-shadow: var(--shadow-xs);
+    }
+    .admin-list-header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .admin-list-title-wrap { display: flex; align-items: center; gap: 8px; }
+    .admin-list-icon {
+      width: 28px; height: 28px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .admin-list-icon .material-symbols-rounded { font-size: 16px; }
+    .admin-list-icon.orange { background: var(--warning-50);  color: var(--warning-600); }
+    .admin-list-icon.gray   { background: var(--gray-100);    color: var(--gray-600); }
+    .admin-list-title { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+    .admin-list-count {
+      font-size: 12px; font-weight: 700;
+      padding: 2px 8px; border-radius: var(--radius-full);
+    }
+    .admin-list-count.orange { background: var(--warning-50); color: var(--warning-600); }
+    .admin-list-count.gray   { background: var(--gray-100);   color: var(--gray-600); }
+    .admin-list-item {
+      display: flex; align-items: center;
+      gap: 10px; padding: 10px 16px;
+      border-bottom: 1px solid var(--gray-50);
+    }
+    .admin-list-item:last-child { border-bottom: none; }
+    .admin-list-avatar {
+      width: 34px; height: 34px; border-radius: var(--radius-full);
+      background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 12px; font-weight: 700; flex-shrink: 0;
+    }
+    .admin-list-name { flex: 1; }
+    .admin-list-nama { font-size: 13px; font-weight: 600; color: var(--gray-900); }
+    .admin-list-mapel { font-size: 11px; color: var(--gray-500); font-weight: 500; }
+    .admin-list-jam {
+      font-size: 12px; font-weight: 700;
+      color: var(--warning-600);
+      background: var(--warning-50);
+      padding: 2px 8px; border-radius: var(--radius-full);
+    }
+    .admin-list-empty {
+      padding: 20px 16px;
+      text-align: center;
+      font-size: 13px; color: var(--gray-400); font-weight: 500;
+    }
+    .admin-list-more {
+      display: block; width: 100%;
+      padding: 10px 16px;
+      text-align: center;
+      font-size: 12px; font-weight: 700;
+      color: var(--primary-600);
+      background: none; border: none;
+      border-top: 1px solid var(--gray-100);
+      cursor: pointer; font-family: var(--font-main);
+    }
+
+    /* ── Kartu GPS mencurigakan ── */
+    .admin-gps-card {
+      background: var(--surface-card);
+      border-radius: var(--radius-xl);
+      margin: 0 16px 10px;
+      overflow: hidden;
+      box-shadow: var(--shadow-xs);
+      display: none;
+    }
+    .admin-gps-card.show { display: block; }
+    .admin-gps-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--danger-50);
+      background: var(--danger-50);
+    }
+    .admin-gps-title { font-size: 13px; font-weight: 700; color: var(--danger-600); }
+    .admin-gps-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; border-bottom: 1px solid var(--gray-50);
+    }
+    .admin-gps-item:last-child { border-bottom: none; }
+    .admin-gps-nama { font-size: 13px; font-weight: 600; color: var(--gray-900); flex: 1; }
+    .admin-gps-chip {
+      font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: var(--radius-full);
+      background: var(--danger-50); color: var(--danger-600);
+    }
+
+    /* ── Rekap bulanan: persentase + top list ── */
+    .admin-bulanan-wrap {
+      margin: 0 16px 10px;
+    }
+    .admin-bulanan-pct-card {
+      background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
+      border-radius: var(--radius-xl);
+      padding: 16px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow-md);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .admin-bulanan-pct-num {
+      font-size: 40px; font-weight: 800; color: #fff; line-height: 1;
+    }
+    .admin-bulanan-pct-sup { font-size: 20px; }
+    .admin-bulanan-pct-info { flex: 1; }
+    .admin-bulanan-pct-label {
+      font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.9);
+    }
+    .admin-bulanan-pct-sub {
+      font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 500;
+    }
+
+    /* Top list perlu perhatian */
+    .admin-top-list-card {
+      background: var(--surface-card);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-xs);
+      margin-bottom: 10px;
+    }
+    .admin-top-list-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px; border-bottom: 1px solid var(--gray-100);
+    }
+    .admin-top-list-icon {
+      width: 28px; height: 28px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .admin-top-list-icon.red    { background: var(--danger-50);  color: var(--danger-600); }
+    .admin-top-list-icon.orange { background: var(--warning-50); color: var(--warning-600); }
+    .admin-top-list-icon .material-symbols-rounded { font-size: 16px; }
+    .admin-top-list-title { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+    .admin-top-item {
+      display: flex; align-items: center;
+      gap: 10px; padding: 10px 16px;
+      border-bottom: 1px solid var(--gray-50);
+    }
+    .admin-top-item:last-child { border-bottom: none; }
+    .admin-top-rank {
+      width: 22px; height: 22px;
+      border-radius: var(--radius-full);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800;
+      background: var(--gray-100); color: var(--gray-600);
+      flex-shrink: 0;
+    }
+    .admin-top-rank.rank-1 { background: var(--danger-50);  color: var(--danger-600); }
+    .admin-top-rank.rank-2 { background: var(--warning-50); color: var(--warning-600); }
+    .admin-top-item-name { flex: 1; }
+    .admin-top-nama  { font-size: 13px; font-weight: 600; color: var(--gray-900); }
+    .admin-top-mapel { font-size: 11px; color: var(--gray-500); }
+    .admin-top-val {
+      font-size: 16px; font-weight: 800; color: var(--danger-600);
+    }
+    .admin-top-val.orange { color: var(--warning-600); }
+    .admin-top-sub { font-size: 10px; color: var(--gray-500); text-align: right; }
+
+    /* ── Grafik tren harian ── */
+    .admin-chart-card {
+      background: var(--surface-card);
+      border-radius: var(--radius-xl);
+      margin: 0 16px 10px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow-xs);
+    }
+    .admin-chart-header {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 12px;
+    }
+    .admin-chart-title { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+    .admin-chart-sub   { font-size: 11px; color: var(--gray-500); font-weight: 500; }
+    .admin-chart-canvas-wrap { position: relative; height: 140px; }
+
+    /* ── Kartu status kepsek ── */
+    .admin-kepsek-status-card {
+      margin: 0 16px 10px;
+      background: var(--surface-card);
+      border-radius: var(--radius-lg);
+      padding: 12px 16px;
+      box-shadow: var(--shadow-xs);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .admin-kepsek-avatar { flex-shrink: 0; }
+    .admin-kepsek-info { flex: 1; }
+    .admin-kepsek-label { font-size: 11px; color: var(--gray-500); font-weight: 600; }
+    .admin-kepsek-nama  { font-size: 14px; font-weight: 700; color: var(--gray-900); }
+    .admin-kepsek-chip {
+      font-size: 12px; font-weight: 700;
+      padding: 4px 12px; border-radius: var(--radius-full);
+    }
+    .admin-kepsek-chip.hadir     { background: var(--success-50); color: var(--success-600); }
+    .admin-kepsek-chip.terlambat { background: var(--warning-50); color: var(--warning-600); }
+    .admin-kepsek-chip.belum     { background: var(--gray-100);   color: var(--gray-600); }
+    .admin-kepsek-chip.izin      { background: var(--info-50);    color: var(--info-500); }
+
+    /* ============================================================
        MODAL / OVERLAY
     ============================================================ */
     .modal-overlay {
@@ -2302,12 +2711,60 @@
       </button>
 
       <div class="login-footer">
-        Lupa kata sandi? Hubungi admin sekolah
+        <span>Lupa kata sandi? Hubungi admin sekolah</span>
+        <button type="button" class="login-info-btn" id="btn-info-app" title="Informasi Aplikasi">
+          <span class="material-symbols-rounded">info</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Informasi Aplikasi (diakses dari ikon info di halaman login) -->
+  <div class="modal-overlay" id="modal-info-app">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div class="modal-title">Informasi Aplikasi</div>
+        <button class="modal-close" id="close-modal-info-app"><span class="material-symbols-rounded">close</span></button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:4px 0 16px;">
+          <div class="login-logo" style="width:56px;height:56px;background:var(--primary-50);border:2px solid var(--primary-100);">
+            <span class="material-symbols-rounded" style="font-size:30px;color:var(--primary-600);">school</span>
+          </div>
+          <div style="font-size:18px;font-weight:800;color:var(--gray-900);margin-top:10px;">SITABA</div>
+          <div style="font-size:12.5px;color:var(--gray-500);margin-top:2px;">Sistem Timeline, Absen dan Berita</div>
+          <div style="font-size:12px;color:var(--gray-400);margin-top:1px;">Presensi dan Komunikasi Internal Guru</div>
+        </div>
+
+        <div style="background:var(--gray-50);border-radius:var(--radius-md);padding:14px;margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:6px;">Pembuat Aplikasi</div>
+          <div style="font-size:14px;font-weight:700;color:var(--gray-900);">Muhammad Hasratul</div>
+          <div style="font-size:12.5px;color:var(--gray-600);margin-top:2px;">Guru · UPT SPF SMP Negeri 16 Makassar</div>
+        </div>
+
+        <a href="https://wa.me/6285259259767" target="_blank" rel="noopener" style="text-decoration:none;">
+          <div style="display:flex;align-items:center;gap:10px;background:var(--success-50);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:16px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <span class="material-symbols-rounded" style="font-size:20px;color:var(--success-600);">chat</span>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:11px;color:var(--success-600);font-weight:600;">Hubungi Admin (WhatsApp)</div>
+              <div style="font-size:13.5px;color:var(--gray-900);font-weight:700;">0852-5925-9767</div>
+            </div>
+            <span class="material-symbols-rounded" style="color:var(--success-600);">chevron_right</span>
+          </div>
+        </a>
+
+        <div style="text-align:center;font-size:11px;color:var(--gray-400);line-height:1.5;">
+          © 2026 SITABA. Hak Cipta Dilindungi Undang-Undang.
+        </div>
       </div>
     </div>
   </div>
 
   <!-- ================================================================
+
        PAGE: BERANDA (HOME DASHBOARD)
   ================================================================ -->
   <div class="page" id="page-beranda">
@@ -2359,32 +2816,33 @@
 
       <!-- Stats Grid -->
       <div class="section-header" id="section-header-rekap">
-        <span class="section-title">Rekap Bulan Ini</span>
+        <span class="section-title" id="judul-rekap-bulan-beranda">Rekap Bulan Ini</span>
         <button class="section-link" id="btn-lihat-rekap">Lihat Semua</button>
       </div>
       <div class="stats-grid">
-        <div class="stat-card">
+        <div class="stat-card green">
           <div class="stat-card-header">
             <div class="stat-icon green"><span class="material-symbols-rounded">check_circle</span></div>
           </div>
           <div class="stat-value" id="stat-hadir">-</div>
           <div class="stat-label">Hari Hadir</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card orange">
           <div class="stat-card-header">
             <div class="stat-icon orange"><span class="material-symbols-rounded">schedule</span></div>
           </div>
           <div class="stat-value" id="stat-terlambat">-</div>
           <div class="stat-label">Terlambat</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card blue">
           <div class="stat-card-header">
             <div class="stat-icon blue"><span class="material-symbols-rounded">medical_services</span></div>
           </div>
           <div class="stat-value" id="stat-sakit">-</div>
           <div class="stat-label">Sakit / Izin</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card red" id="stat-card-alpha">
+          <span class="stat-card-alert-badge" id="badge-alpha-alert">Perlu Perhatian</span>
           <div class="stat-card-header">
             <div class="stat-icon red"><span class="material-symbols-rounded">cancel</span></div>
           </div>
@@ -2452,6 +2910,210 @@
           <span class="quick-menu-label">Pengaturan</span>
         </button>
       </div>
+
+      <!-- ============================================================
+           ADMIN DASHBOARD — hanya tampil untuk admin/kepsek
+           Diisi oleh muatAdminDashboard() saat renderBeranda()
+      ============================================================ -->
+      <div id="admin-dashboard-wrap">
+
+        <!-- Divider section header -->
+        <div class="section-header" style="margin-top:4px;">
+          <span class="section-title" id="admin-dash-section-title">Ringkasan Sekolah Hari Ini</span>
+        </div>
+
+        <!-- Bar: hari ini + status hari kerja/libur (#12) -->
+        <div class="admin-day-status-bar" id="admin-day-bar">
+          <div class="admin-day-status-icon kerja" id="admin-day-icon">
+            <span class="material-symbols-rounded">today</span>
+          </div>
+          <div class="admin-day-status-text">
+            <div class="admin-day-status-title" id="admin-day-title">Memuat...</div>
+            <div class="admin-day-status-sub"   id="admin-day-sub"></div>
+          </div>
+          <div class="admin-day-libur-chip hidden" id="admin-day-libur-chip">Libur</div>
+        </div>
+
+        <!-- Kartu status kepsek (#9) — hanya tampil untuk role kepsek -->
+        <div class="admin-kepsek-status-card hidden" id="admin-kepsek-status">
+          <div class="admin-kepsek-avatar" id="admin-kepsek-avatar"></div>
+          <div class="admin-kepsek-info">
+            <div class="admin-kepsek-label">Status Kehadiran Saya</div>
+            <div class="admin-kepsek-nama" id="admin-kepsek-nama">-</div>
+          </div>
+          <div class="admin-kepsek-chip belum" id="admin-kepsek-chip">Belum Absen</div>
+        </div>
+
+        <!-- 5 kartu KPI angka besar (#1) -->
+        <div class="admin-kpi-grid">
+          <div class="admin-kpi-card full-width" id="admin-kpi-total"
+               onclick="navigasiAdminDash('laporan')">
+            <div class="admin-kpi-top">
+              <div class="admin-kpi-icon blue">
+                <span class="material-symbols-rounded">groups</span>
+              </div>
+            </div>
+            <div class="admin-kpi-value" id="admin-kpi-total-val">-</div>
+            <div class="admin-kpi-label">Total Guru &amp; Pegawai</div>
+          </div>
+
+          <div class="admin-kpi-card" id="admin-kpi-hadir"
+               onclick="navigasiAdminDash('laporan')">
+            <div class="admin-kpi-top">
+              <div class="admin-kpi-icon green">
+                <span class="material-symbols-rounded">check_circle</span>
+              </div>
+            </div>
+            <div class="admin-kpi-value" id="admin-kpi-hadir-val">-</div>
+            <div class="admin-kpi-label">Sudah Hadir</div>
+          </div>
+
+          <div class="admin-kpi-card" id="admin-kpi-terlambat"
+               onclick="navigasiAdminDash('laporan')">
+            <div class="admin-kpi-top">
+              <div class="admin-kpi-icon orange">
+                <span class="material-symbols-rounded">schedule</span>
+              </div>
+            </div>
+            <div class="admin-kpi-value" id="admin-kpi-terlambat-val">-</div>
+            <div class="admin-kpi-label">Terlambat</div>
+          </div>
+
+          <div class="admin-kpi-card" id="admin-kpi-izin"
+               onclick="navigasiAdminDash('izin-kelola')">
+            <div class="admin-kpi-top">
+              <div class="admin-kpi-icon gray">
+                <span class="material-symbols-rounded">medical_services</span>
+              </div>
+              <!-- Badge izin pending (#10) -->
+              <div class="admin-kpi-badge" id="admin-kpi-pending-badge">0</div>
+            </div>
+            <div class="admin-kpi-value" id="admin-kpi-izin-val">-</div>
+            <div class="admin-kpi-label">Izin / Sakit</div>
+          </div>
+
+          <div class="admin-kpi-card" id="admin-kpi-belum"
+               onclick="navigasiAdminDash('laporan')">
+            <div class="admin-kpi-top">
+              <div class="admin-kpi-icon red">
+                <span class="material-symbols-rounded">person_off</span>
+              </div>
+            </div>
+            <div class="admin-kpi-value" id="admin-kpi-belum-val">-</div>
+            <div class="admin-kpi-label">Belum Absen</div>
+          </div>
+        </div>
+
+        <!-- Progress bar kehadiran (#2) -->
+        <div class="admin-progress-wrap" id="admin-progress-wrap">
+          <div class="admin-progress-header">
+            <div class="admin-progress-label">Kehadiran Hari Ini</div>
+            <div class="admin-progress-pct" id="admin-progress-pct">0%</div>
+          </div>
+          <div class="admin-progress-track">
+            <div class="admin-progress-fill" id="admin-progress-fill" style="width:0%"></div>
+          </div>
+          <div class="admin-progress-sub" id="admin-progress-sub">Memuat data...</div>
+        </div>
+
+        <!-- GPS mencurigakan (#13) — hanya muncul kalau ada -->
+        <div class="admin-gps-card" id="admin-gps-card">
+          <div class="admin-gps-header">
+            <span class="material-symbols-rounded" style="font-size:18px;color:var(--danger-600);">fmd_bad</span>
+            <div class="admin-gps-title">Lokasi Mencurigakan Hari Ini</div>
+          </div>
+          <div id="admin-gps-list"></div>
+        </div>
+
+        <!-- Daftar terlambat hari ini (#4) -->
+        <div class="admin-list-card" id="admin-terlambat-card">
+          <div class="admin-list-header">
+            <div class="admin-list-title-wrap">
+              <div class="admin-list-icon orange">
+                <span class="material-symbols-rounded">schedule</span>
+              </div>
+              <div class="admin-list-title">Terlambat Hari Ini</div>
+            </div>
+            <div class="admin-list-count orange" id="admin-terlambat-count">0</div>
+          </div>
+          <div id="admin-terlambat-list">
+            <div class="admin-list-empty">Memuat...</div>
+          </div>
+        </div>
+
+        <!-- Daftar belum absen (#3) -->
+        <div class="admin-list-card" id="admin-belum-card">
+          <div class="admin-list-header">
+            <div class="admin-list-title-wrap">
+              <div class="admin-list-icon gray">
+                <span class="material-symbols-rounded">person_off</span>
+              </div>
+              <div class="admin-list-title">Belum Absen</div>
+            </div>
+            <div class="admin-list-count gray" id="admin-belum-count">0</div>
+          </div>
+          <div id="admin-belum-list">
+            <div class="admin-list-empty">Memuat...</div>
+          </div>
+        </div>
+
+        <!-- Section header bulanan -->
+        <div class="section-header" style="margin-top:4px;">
+          <span class="section-title" id="admin-dash-bulanan-title">Rekap Bulan Ini</span>
+        </div>
+
+        <!-- Persentase kehadiran bulanan (#7) -->
+        <div class="admin-bulanan-wrap">
+          <div class="admin-bulanan-pct-card" id="admin-bulanan-pct-card"
+               onclick="navigasiAdminDash('laporan')">
+            <div>
+              <div class="admin-bulanan-pct-num">
+                <span id="admin-bulanan-pct-val">-</span><span class="admin-bulanan-pct-sup">%</span>
+              </div>
+            </div>
+            <div class="admin-bulanan-pct-info">
+              <div class="admin-bulanan-pct-label">Kehadiran Rata-rata</div>
+              <div class="admin-bulanan-pct-sub" id="admin-bulanan-pct-sub">Bulan ini</div>
+            </div>
+          </div>
+
+          <!-- Top Alpa bulan ini (#5) -->
+          <div class="admin-top-list-card" id="admin-top-alpa-card">
+            <div class="admin-top-list-header">
+              <div class="admin-top-list-icon red">
+                <span class="material-symbols-rounded">warning</span>
+              </div>
+              <div class="admin-top-list-title">Perlu Perhatian — Alpa Terbanyak</div>
+            </div>
+            <div id="admin-top-alpa-list"></div>
+          </div>
+
+          <!-- Top Sakit/Izin bulan ini (#6) -->
+          <div class="admin-top-list-card" id="admin-top-sakit-card">
+            <div class="admin-top-list-header">
+              <div class="admin-top-list-icon orange">
+                <span class="material-symbols-rounded">sick</span>
+              </div>
+              <div class="admin-top-list-title">Sering Izin / Sakit</div>
+            </div>
+            <div id="admin-top-sakit-list"></div>
+          </div>
+        </div>
+
+        <!-- Grafik tren harian (#8) -->
+        <div class="admin-chart-card">
+          <div class="admin-chart-header">
+            <div>
+              <div class="admin-chart-title">Tren Kehadiran Harian</div>
+              <div class="admin-chart-sub" id="admin-chart-sub">Bulan ini</div>
+            </div>
+          </div>
+          <div class="admin-chart-canvas-wrap">
+            <canvas id="admin-tren-chart"></canvas>
+          </div>
+        </div>
+
+      </div><!-- /admin-dashboard-wrap -->
 
       <!-- Pengumuman Terbaru -->
       <div class="section-header">
@@ -2542,7 +3204,7 @@
         </div>
 
         <div class="absen-rekap-mini">
-          <div class="absen-rekap-title">Rekap Bulan Ini</div>
+          <div class="absen-rekap-title" id="judul-rekap-bulan-absen">Rekap Bulan Ini</div>
           <div class="rekap-row">
             <div class="rekap-item green">
               <div class="rekap-item-value" id="rekap-hadir">-</div>
@@ -2558,7 +3220,7 @@
             </div>
             <div class="rekap-item red">
               <div class="rekap-item-value" id="rekap-alpha">-</div>
-              <div class="rekap-item-label">Alpha</div>
+              <div class="rekap-item-label">Alpa</div>
             </div>
           </div>
         </div>
@@ -4678,8 +5340,392 @@ async function renderBeranda() {
   await muatBadgeMenuCepat();
   await muatPengumuman();
 
+  // Dashboard admin — muat data real-time sekolah (hanya untuk admin/kepsek)
+  if (['admin', 'kepsek'].includes(p.role)) {
+    await muatAdminDashboard();
+  }
+
   // Muat sosmed feed (preview di beranda dipakai dari render yang sama)
   await muatSosmedFeed();
+}
+
+/* ============================================================
+   9b. ADMIN DASHBOARD — Ringkasan Sekolah Real-time
+   Semua fitur A–E dari daftar fitur:
+     #1  kartu KPI 5 angka besar
+     #2  progress bar kehadiran hari ini
+     #3  daftar belum absen
+     #4  daftar terlambat + jam
+     #5  top alpa bulan ini
+     #6  top izin/sakit bulan ini
+     #7  persentase kehadiran bulanan
+     #8  grafik tren harian (Chart.js)
+     #9  kartu status kepsek
+     #10 badge izin pending di kartu KPI
+     #11 shortcut klik kartu → halaman terkait
+     #12 label hari ini + status hari kerja/libur
+     #13 flag GPS mencurigakan
+   ============================================================ */
+
+let _adminTrenChart = null; // simpan instance Chart.js agar bisa di-destroy saat re-render
+
+/** Navigasi shortcut dari kartu-kartu admin dashboard */
+function navigasiAdminDash(tujuan) {
+  if (tujuan === 'laporan') {
+    tampilHalaman('laporan');
+    muatLaporan();
+  } else if (tujuan === 'izin-kelola') {
+    tampilHalaman('izin');
+    initTabIzin();
+    setTimeout(() => document.querySelector('.izin-tab[data-tab="kelola"]')?.click(), 50);
+  }
+}
+
+async function muatAdminDashboard() {
+  const p    = APP.profile;
+  const wrap = document.getElementById('admin-dashboard-wrap');
+  if (!wrap || !p) return;
+
+  wrap.classList.add('visible');
+
+  const now    = new Date();
+  const thn    = now.getFullYear();
+  const bln    = now.getMonth() + 1;
+  const namaBulanList = ['Januari','Februari','Maret','April','Mei','Juni',
+                          'Juli','Agustus','September','Oktober','November','Desember'];
+  const namaBulan = namaBulanList[bln - 1];
+
+  document.getElementById('admin-dash-bulanan-title').textContent = `Rekap ${namaBulan} ${thn}`;
+
+  // Jalankan semua fetch paralel
+  const hariIniDB = now.toLocaleDateString('id-ID', { timeZone:'Asia/Makassar' })
+                       .split('/').reverse().join('-');
+
+  const [
+    resRingkasan,
+    resDetail,
+    resRekap,
+    resTren,
+    resHariIni,
+    resIzinPending,
+    resHariLibur,
+  ] = await Promise.all([
+    sb.rpc('laporan_ringkasan_sekolah'),
+    sb.rpc('laporan_ringkasan_detail_sekolah'),
+    sb.rpc('laporan_rekapitulasi_bulan', { bln, thn }),
+    sb.rpc('laporan_tren_harian_bulan', { bln, thn }),
+    p.role === 'kepsek'
+      ? sb.from('presensi')
+          .select('status_kehadiran, waktu_masuk')
+          .eq('guru_id', APP.user.id)
+          .eq('tanggal', hariIniDB)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    sb.from('pengajuan_izin')
+      .select('id', { count: 'exact', head: true })
+      .eq('status_approval', 'Pending'),
+    sb.from('hari_libur')
+      .select('keterangan')
+      .eq('tanggal', hariIniDB)
+      .maybeSingle(),
+  ]);
+
+  // ── #12: Label hari + status hari kerja/libur ─────────────────────────
+  const hariIniWITA = now.toLocaleDateString('id-ID', { timeZone:'Asia/Makassar', weekday:'long' });
+  const namaHariCapital = hariIniWITA.charAt(0).toUpperCase() + hariIniWITA.slice(1);
+  const hariIniStr = now.toLocaleDateString('id-ID', {
+    timeZone: 'Asia/Makassar', weekday: 'long', day: 'numeric', month: 'long'
+  });
+  const infoHariLibur = resHariLibur?.data;
+  const { data: konfHari } = await sb
+    .from('konfigurasi_hari')
+    .select('is_hari_kerja')
+    .eq('nama_hari', namaHariCapital)
+    .maybeSingle();
+  const isHariKerja = konfHari?.is_hari_kerja !== false && !infoHariLibur;
+  const dayBarIcon   = document.getElementById('admin-day-icon');
+  const dayBarTitle  = document.getElementById('admin-day-title');
+  const dayBarSub    = document.getElementById('admin-day-sub');
+  const dayLiburChip = document.getElementById('admin-day-libur-chip');
+  dayBarTitle.textContent = hariIniStr;
+  if (isHariKerja) {
+    dayBarSub.textContent = 'Hari kerja aktif — data di bawah adalah real-time';
+    dayBarIcon.className  = 'admin-day-status-icon kerja';
+    dayBarIcon.innerHTML  = '<span class="material-symbols-rounded">today</span>';
+    sembunyikan(dayLiburChip);
+  } else {
+    const alasan = infoHariLibur?.keterangan || (konfHari?.is_hari_kerja === false ? 'Akhir Pekan' : 'Libur');
+    dayBarSub.textContent = `${alasan} — Absensi tidak diwajibkan hari ini`;
+    dayBarIcon.className  = 'admin-day-status-icon libur';
+    dayBarIcon.innerHTML  = '<span class="material-symbols-rounded">weekend</span>';
+    tampilkan(dayLiburChip);
+    dayLiburChip.textContent = alasan;
+  }
+
+  // ── #1: Kartu KPI 5 angka besar ──────────────────────────────────────
+  if (resRingkasan.data) {
+    const row = Array.isArray(resRingkasan.data) ? resRingkasan.data[0] : resRingkasan.data;
+    if (row) {
+      document.getElementById('admin-kpi-total-val').textContent    = row.total_guru   ?? '-';
+      document.getElementById('admin-kpi-hadir-val').textContent    = (Number(row.sudah_hadir||0) + Number(row.terlambat||0)) || '0';
+      document.getElementById('admin-kpi-terlambat-val').textContent = row.terlambat  ?? '0';
+      document.getElementById('admin-kpi-izin-val').textContent     = row.izin_sakit  ?? '0';
+      document.getElementById('admin-kpi-belum-val').textContent    = row.belum_absen ?? '-';
+
+      // ── #2: Progress bar ───────────────────────────────────────────────
+      const totalGuru  = Number(row.total_guru  || 0);
+      const sudahAbsen = Number(row.sudah_hadir || 0) + Number(row.terlambat || 0) + Number(row.izin_sakit || 0);
+      const pct = totalGuru > 0 ? Math.round((sudahAbsen / totalGuru) * 100) : 0;
+      document.getElementById('admin-progress-pct').textContent  = pct + '%';
+      document.getElementById('admin-progress-fill').style.width = pct + '%';
+      document.getElementById('admin-progress-sub').textContent  =
+        `${sudahAbsen} dari ${totalGuru} sudah presensi hari ini`;
+    }
+  }
+
+  // ── #10: Badge izin pending di kartu KPI ─────────────────────────────
+  const jumlahPending = resIzinPending?.count || 0;
+  const kpiBadge = document.getElementById('admin-kpi-pending-badge');
+  if (kpiBadge) {
+    if (jumlahPending > 0) {
+      kpiBadge.textContent = jumlahPending > 9 ? '9+' : jumlahPending;
+      kpiBadge.classList.add('show');
+    } else {
+      kpiBadge.classList.remove('show');
+    }
+  }
+
+  // ── #3 & #4: Daftar belum absen + terlambat ──────────────────────────
+  if (resDetail.data) {
+    const belumList     = resDetail.data.filter(r => r.tipe === 'belum_absen');
+    const terlambatList = resDetail.data.filter(r => r.tipe === 'terlambat');
+    const MAX_SHOW = 5;
+
+    document.getElementById('admin-terlambat-count').textContent = terlambatList.length;
+    document.getElementById('admin-belum-count').textContent     = belumList.length;
+
+    const elTerlambat = document.getElementById('admin-terlambat-list');
+    if (terlambatList.length === 0) {
+      elTerlambat.innerHTML = '<div class="admin-list-empty">Tidak ada yang terlambat ✓</div>';
+    } else {
+      elTerlambat.innerHTML = terlambatList.slice(0, MAX_SHOW).map(g => `
+        <div class="admin-list-item">
+          <div class="admin-list-avatar">${inisial(g.nama)}</div>
+          <div class="admin-list-name">
+            <div class="admin-list-nama">${escapeHTML(g.nama || '-')}</div>
+            <div class="admin-list-mapel">${escapeHTML(g.mapel || '-')}</div>
+          </div>
+          ${g.waktu_masuk ? `<div class="admin-list-jam">${formatJam(new Date(g.waktu_masuk))}</div>` : ''}
+        </div>`).join('') +
+        (terlambatList.length > MAX_SHOW
+          ? `<button class="admin-list-more" onclick="navigasiAdminDash('laporan')">
+               Lihat semua ${terlambatList.length} yang terlambat →
+             </button>` : '');
+    }
+
+    const elBelum = document.getElementById('admin-belum-list');
+    if (belumList.length === 0) {
+      elBelum.innerHTML = '<div class="admin-list-empty">Semua sudah absen ✓</div>';
+    } else {
+      elBelum.innerHTML = belumList.slice(0, MAX_SHOW).map(g => `
+        <div class="admin-list-item">
+          <div class="admin-list-avatar">${inisial(g.nama)}</div>
+          <div class="admin-list-name">
+            <div class="admin-list-nama">${escapeHTML(g.nama || '-')}</div>
+            <div class="admin-list-mapel">${escapeHTML(g.mapel || '-')}</div>
+          </div>
+        </div>`).join('') +
+        (belumList.length > MAX_SHOW
+          ? `<button class="admin-list-more" onclick="navigasiAdminDash('laporan')">
+               +${belumList.length - MAX_SHOW} lainnya belum absen →
+             </button>` : '');
+    }
+
+    // ── #13: GPS mencurigakan ─────────────────────────────────────────
+    const { data: gpsData } = await sb
+      .from('presensi')
+      .select('guru_id, status_lokasi_masuk, status_lokasi_pulang, profiles(nama, mapel)')
+      .eq('tanggal', hariIniDB)
+      .or('status_lokasi_masuk.eq.Luar Radius,status_lokasi_pulang.eq.Luar Radius');
+
+    const gpsCard = document.getElementById('admin-gps-card');
+    const gpsList = document.getElementById('admin-gps-list');
+    if (gpsData && gpsData.length > 0) {
+      gpsList.innerHTML = gpsData.map(g => {
+        const namaGuru  = g.profiles?.nama  || '(tidak diketahui)';
+        const mapelGuru = g.profiles?.mapel || '';
+        const chips = [
+          g.status_lokasi_masuk  === 'Luar Radius' ? 'Masuk'  : null,
+          g.status_lokasi_pulang === 'Luar Radius' ? 'Pulang' : null,
+        ].filter(Boolean);
+        return `<div class="admin-gps-item">
+          <div class="admin-list-avatar">${inisial(namaGuru)}</div>
+          <div class="admin-gps-nama">${escapeHTML(namaGuru)}
+            <br><span style="font-size:11px;color:var(--gray-500);">${escapeHTML(mapelGuru)}</span>
+          </div>
+          ${chips.map(c => `<div class="admin-gps-chip">${c} Luar Radius</div>`).join('')}
+        </div>`;
+      }).join('');
+      gpsCard.classList.add('show');
+    } else {
+      gpsCard.classList.remove('show');
+    }
+  }
+
+  // ── #5, #6, #7: Rekap bulanan ─────────────────────────────────────────
+  if (resRekap.data && resRekap.data.length > 0) {
+    const rekap = resRekap.data;
+
+    // #7 Persentase kehadiran rata-rata
+    let totalHadir = 0, totalWajib = 0;
+    rekap.forEach(r => {
+      totalHadir += Number(r.hadir || 0) + Number(r.terlambat || 0);
+      totalWajib += Number(r.total_hari_kerja || 0);
+    });
+    const pctBulanan = totalWajib > 0 ? Math.round((totalHadir / totalWajib) * 100) : 0;
+    document.getElementById('admin-bulanan-pct-val').textContent = pctBulanan;
+    document.getElementById('admin-bulanan-pct-sub').textContent =
+      `${namaBulan} ${thn} · ${rekap.length} guru/pegawai`;
+
+    // #5 Top Alpa terbanyak (top 3)
+    const topAlpa = [...rekap]
+      .filter(r => Number(r.alfa) > 0)
+      .sort((a, b) => Number(b.alfa) - Number(a.alfa))
+      .slice(0, 3);
+    const elAlpa = document.getElementById('admin-top-alpa-list');
+    if (topAlpa.length === 0) {
+      elAlpa.innerHTML = '<div class="admin-list-empty">Tidak ada alpa bulan ini ✓</div>';
+    } else {
+      elAlpa.innerHTML = topAlpa.map((r, i) => `
+        <div class="admin-top-item">
+          <div class="admin-top-rank rank-${i+1}">${i+1}</div>
+          <div class="admin-top-item-name">
+            <div class="admin-top-nama">${escapeHTML(r.nama)}</div>
+            <div class="admin-top-mapel">${escapeHTML(r.mapel || r.role || '-')}</div>
+          </div>
+          <div>
+            <div class="admin-top-val">${r.alfa}</div>
+            <div class="admin-top-sub">hari alpa</div>
+          </div>
+        </div>`).join('');
+    }
+
+    // #6 Top Sakit/Izin terbanyak (top 3)
+    const topSakit = [...rekap]
+      .map(r => ({ ...r, total_izin: Number(r.sakit||0) + Number(r.izin||0) }))
+      .filter(r => r.total_izin > 0)
+      .sort((a, b) => b.total_izin - a.total_izin)
+      .slice(0, 3);
+    const elSakit = document.getElementById('admin-top-sakit-list');
+    if (topSakit.length === 0) {
+      elSakit.innerHTML = '<div class="admin-list-empty">Tidak ada izin/sakit bulan ini</div>';
+    } else {
+      elSakit.innerHTML = topSakit.map((r, i) => `
+        <div class="admin-top-item">
+          <div class="admin-top-rank rank-${i+1}">${i+1}</div>
+          <div class="admin-top-item-name">
+            <div class="admin-top-nama">${escapeHTML(r.nama)}</div>
+            <div class="admin-top-mapel">${escapeHTML(r.mapel || r.role || '-')}</div>
+          </div>
+          <div>
+            <div class="admin-top-val orange">${r.total_izin}</div>
+            <div class="admin-top-sub">hari izin/sakit</div>
+          </div>
+        </div>`).join('');
+    }
+  }
+
+  // ── #8: Grafik tren harian (Chart.js) ────────────────────────────────
+  if (resTren.data && resTren.data.length > 0) {
+    const trenData   = resTren.data;
+    const labels     = trenData.map(d => `${String(d.tanggal).slice(8)} ${d.nama_hari}`);
+    const dataHadir  = trenData.map(d => Number(d.total_hadir));
+    const dataIzin   = trenData.map(d => Number(d.total_izin));
+    const totalWajib = Number(trenData[0]?.total_wajib || 0);
+
+    document.getElementById('admin-chart-sub').textContent =
+      `${namaBulan} ${thn} · Total staf: ${totalWajib}`;
+
+    const ctx = document.getElementById('admin-tren-chart')?.getContext('2d');
+    if (ctx) {
+      if (_adminTrenChart) { _adminTrenChart.destroy(); _adminTrenChart = null; }
+      _adminTrenChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Hadir',
+              data: dataHadir,
+              backgroundColor: 'rgba(76, 175, 80, 0.75)',
+              borderRadius: 4,
+              borderSkipped: false,
+            },
+            {
+              label: 'Izin/Sakit',
+              data: dataIzin,
+              backgroundColor: 'rgba(63, 81, 181, 0.5)',
+              borderRadius: 4,
+              borderSkipped: false,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { font: { size: 10, family: 'Plus Jakarta Sans' }, boxWidth: 10, padding: 8 },
+            },
+            tooltip: {
+              callbacks: {
+                afterLabel: ctx => {
+                  if (ctx.datasetIndex === 0 && totalWajib > 0) {
+                    return '(' + Math.round(ctx.raw / totalWajib * 100) + '%)';
+                  }
+                  return '';
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { font: { size: 9 }, maxRotation: 0 },
+              grid: { display: false },
+            },
+            y: {
+              beginAtZero: true,
+              max: totalWajib || undefined,
+              ticks: { font: { size: 9 }, stepSize: Math.ceil(totalWajib / 5) || 1 },
+              grid: { color: 'rgba(0,0,0,0.06)' },
+            },
+          },
+        },
+      });
+    }
+  }
+
+  // ── #9: Kartu status kepsek ───────────────────────────────────────────
+  if (p.role === 'kepsek') {
+    const cardKepsek = document.getElementById('admin-kepsek-status');
+    tampilkan(cardKepsek);
+    document.getElementById('admin-kepsek-nama').textContent = p.nama || p.username || 'Kepala Sekolah';
+    const avatarEl = document.getElementById('admin-kepsek-avatar');
+    if (avatarEl) avatarEl.innerHTML = htmlAvatar(p.nama, p.foto_profil_id, 40);
+    const chip = document.getElementById('admin-kepsek-chip');
+    const absenKepsek = resHariIni?.data;
+    if (!absenKepsek) {
+      chip.textContent = 'Belum Absen'; chip.className = 'admin-kepsek-chip belum';
+    } else if (absenKepsek.status_kehadiran === 'Hadir') {
+      chip.textContent = 'Hadir'; chip.className = 'admin-kepsek-chip hadir';
+    } else if (absenKepsek.status_kehadiran === 'Terlambat') {
+      chip.textContent = 'Terlambat'; chip.className = 'admin-kepsek-chip terlambat';
+    } else {
+      chip.textContent = absenKepsek.status_kehadiran || 'Hadir';
+      chip.className   = 'admin-kepsek-chip izin';
+    }
+  }
 }
 
 /* ============================================================
@@ -4692,19 +5738,44 @@ async function muatRekapBulanIni() {
   const awal  = `${thn}-${String(bln).padStart(2,'0')}-01`;
   const akhir = `${thn}-${String(bln).padStart(2,'0')}-${String(hariTerakhirBulan(thn, bln)).padStart(2,'0')}`;
 
-  const { data, error } = await sb
-    .from('presensi')
-    .select('status_kehadiran')
-    .eq('guru_id', APP.user.id)
-    .gte('tanggal', awal)
-    .lte('tanggal', akhir);
+  // Nama bulan berjalan disisipkan ke judul kartu, contoh: "Rekap Bulan Ini · Juni 2026"
+  const namaBulanPanjang = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const labelBulan = `Rekap Bulan Ini · ${namaBulanPanjang[bln - 1]} ${thn}`;
+  setText('judul-rekap-bulan-beranda', labelBulan);
+  setText('judul-rekap-bulan-absen',   labelBulan);
+
+  // Tampilkan skeleton loading di semua kartu selagi data dimuat,
+  // supaya tidak terlihat seperti kosong/macet.
+  const idStatSkeleton = ['stat-hadir','stat-terlambat','stat-sakit','stat-alpha','rekap-hadir','rekap-terlambat','rekap-izin','rekap-alpha'];
+  idStatSkeleton.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = '00'; el.classList.add('is-loading'); }
+  });
+
+  // PERBAIKAN: pakai RPC laporan_detail_guru (bukan query langsung ke tabel
+  // presensi) karena tabel presensi HANYA punya baris untuk hari yang benar-
+  // benar diabsen. Hari yang dilewatkan (tidak absen sama sekali) tidak punya
+  // baris sama sekali di tabel itu, sehingga tidak pernah terhitung "Alpa"
+  // kalau dihitung dari hasil query lama. RPC ini membuat kalender lengkap
+  // per-hari dan menandai "Alpa" untuk hari wajib yang sudah lewat jam pulang
+  // tapi tidak ada presensinya (logika sama dengan yang dipakai di halaman
+  // Laporan & rekap admin/kepsek).
+  const { data, error } = await sb.rpc('laporan_detail_guru', {
+    target_guru_id: APP.user.id,
+    tgl_dari: awal,
+    tgl_sampai: akhir,
+  });
+
+  // Lepas skeleton loading apa pun hasilnya (sukses/gagal), supaya tidak
+  // tersangkut berkedip terus kalau RPC error.
+  idStatSkeleton.forEach(id => document.getElementById(id)?.classList.remove('is-loading'));
 
   if (error || !data) return;
 
   const hadir     = data.filter(r => r.status_kehadiran === 'Hadir').length;
   const terlambat = data.filter(r => r.status_kehadiran === 'Terlambat').length;
   const sakit     = data.filter(r => ['Sakit', 'Izin'].includes(r.status_kehadiran)).length;
-  const alpha     = data.filter(r => !['Hadir', 'Terlambat', 'Sakit', 'Izin'].includes(r.status_kehadiran)).length;
+  const alpha     = data.filter(r => r.status_kehadiran === 'Alpa').length;
 
   // Beranda stats
   setText('stat-hadir',     hadir);
@@ -4717,6 +5788,11 @@ async function muatRekapBulanIni() {
   setText('rekap-terlambat', terlambat);
   setText('rekap-izin',      sakit);
   setText('rekap-alpha',     alpha);
+
+  // Badge "Perlu Perhatian" muncul di kartu Tidak Hadir/Alpa kalau ada
+  // ketidakhadiran tanpa keterangan bulan ini, supaya kepsek/guru langsung
+  // sadar tanpa harus membaca angkanya dulu.
+  document.getElementById('stat-card-alpha')?.classList.toggle('has-alert', alpha > 0);
 }
 
 /* ============================================================
@@ -7282,6 +8358,10 @@ function konfirmasiDialog({ judul = 'Konfirmasi', pesan = 'Apakah Anda yakin?', 
 }
 
 function initModals() {
+  // ── Modal Informasi Aplikasi (halaman login) ────────────────────────────
+  document.getElementById('btn-info-app')?.addEventListener('click', () => bukaModal('modal-info-app'));
+  document.getElementById('close-modal-info-app')?.addEventListener('click', () => tutupModal('modal-info-app'));
+
   // ── Modal Preview PDF ──────────────────────────────────────────────────
   document.getElementById('close-modal-preview-pdf')?.addEventListener('click', () => {
     tutupModal('modal-preview-pdf');
@@ -7461,7 +8541,7 @@ function initNavigasi() {
   document.getElementById('qm-sosmed')?.addEventListener('click', () => { tampilHalaman('sosmed'); muatSosmedFeed(); });
   document.getElementById('btn-all-pengumuman')?.addEventListener('click', () => { tampilHalaman('pengumuman'); muatPengumuman(); });
   document.getElementById('btn-all-sosmed')?.addEventListener('click', () => { tampilHalaman('sosmed'); muatSosmedFeed(); });
-  document.getElementById('btn-lihat-rekap')?.addEventListener('click', () => tampilHalaman('izin'));
+  document.getElementById('btn-lihat-rekap')?.addEventListener('click', () => tampilHalaman('laporan'));
   document.getElementById('qm-kelola-izin')?.addEventListener('click', () => {
     tampilHalaman('izin');
     initTabIzin();
@@ -7717,7 +8797,7 @@ function renderLaporanTab() {
               <th style="padding:10px 6px;font-size:11px;text-align:center;font-weight:600;">Terlambat</th>
               <th style="padding:10px 6px;font-size:11px;text-align:center;font-weight:600;">Sakit</th>
               <th style="padding:10px 6px;font-size:11px;text-align:center;font-weight:600;">Izin</th>
-              <th style="padding:10px 6px;font-size:11px;text-align:center;font-weight:600;">Alfa</th>
+              <th style="padding:10px 6px;font-size:11px;text-align:center;font-weight:600;">Alpa</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -7763,11 +8843,15 @@ function renderLaporanPribadi(guruInfo) {
 
   const data = _laporanData.detailPribadi || [];
 
-  const hadir     = data.filter(r => r.status_kehadiran === 'Hadir').length;
-  const terlambat = data.filter(r => r.status_kehadiran === 'Terlambat').length;
-  const sakit     = data.filter(r => r.status_kehadiran === 'Sakit').length;
-  const izin      = data.filter(r => r.status_kehadiran === 'Izin').length;
-  const alfa      = data.filter(r => r.status_kehadiran === 'Alfa').length;
+  const hadir         = data.filter(r => r.status_kehadiran === 'Hadir').length;
+  const terlambat     = data.filter(r => r.status_kehadiran === 'Terlambat').length;
+  const sakit         = data.filter(r => r.status_kehadiran === 'Sakit').length;
+  const izin          = data.filter(r => r.status_kehadiran === 'Izin').length;
+  const alfa          = data.filter(r => r.status_kehadiran === 'Alpa').length;
+  // Total hari wajib hadir bulan ini, dihitung dari kolom wajib_hadir yang
+  // sudah disediakan langsung oleh RPC laporan_detail_guru (tidak perlu
+  // query/RPC tambahan — datanya sudah ada di "data" yang sama).
+  const totalHariKerja = data.filter(r => r.wajib_hadir).length;
 
   // Kartu info identitas (jika admin lagi lihat orang tertentu)
   const kartuIdentitas = guruInfo ? `
@@ -7777,26 +8861,36 @@ function renderLaporanPribadi(guruInfo) {
     </div>` : '';
 
   const kartuRingkasan = kartuIdentitas + `
-    <div class="stats-grid" style="padding:0 16px;margin-bottom:16px;">
-      <div class="stat-card">
+    <div class="stats-grid stats-grid-3col" style="padding:0 16px;margin-bottom:16px;">
+      <div class="stat-card green">
         <div class="stat-card-header"><div class="stat-icon green"><span class="material-symbols-rounded">check_circle</span></div></div>
         <div class="stat-value">${hadir}</div>
-        <div class="stat-label">Hari Hadir</div>
+        <div class="stat-label">Hadir</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card orange">
         <div class="stat-card-header"><div class="stat-icon orange"><span class="material-symbols-rounded">schedule</span></div></div>
         <div class="stat-value">${terlambat}</div>
         <div class="stat-label">Terlambat</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card blue">
         <div class="stat-card-header"><div class="stat-icon blue"><span class="material-symbols-rounded">medical_services</span></div></div>
         <div class="stat-value">${sakit}</div>
         <div class="stat-label">Sakit</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-card-header"><div class="stat-icon red"><span class="material-symbols-rounded">event_busy</span></div></div>
+      <div class="stat-card blue">
+        <div class="stat-card-header"><div class="stat-icon blue"><span class="material-symbols-rounded">event_busy</span></div></div>
         <div class="stat-value">${izin}</div>
         <div class="stat-label">Izin</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-card-header"><div class="stat-icon red"><span class="material-symbols-rounded">cancel</span></div></div>
+        <div class="stat-value">${alfa}</div>
+        <div class="stat-label">Alpa</div>
+      </div>
+      <div class="stat-card gray">
+        <div class="stat-card-header"><div class="stat-icon gray"><span class="material-symbols-rounded">calendar_month</span></div></div>
+        <div class="stat-value">${totalHariKerja}</div>
+        <div class="stat-label">Hari Kerja</div>
       </div>
     </div>`;
 
@@ -7865,7 +8959,7 @@ function exportLaporanCSV() {
   }
 
   if (!_laporanData.rekap.length) { toast('Muat data laporan terlebih dahulu', 'warning'); return; }
-  const headers = ['Nama','NIP','Pangkat','Mapel','Role','Hadir','Terlambat','Sakit','Izin','Alfa','Hari Kerja'];
+  const headers = ['Nama','NIP','Pangkat','Mapel','Role','Hadir','Terlambat','Sakit','Izin','Alpa','Hari Kerja'];
   const rows = _laporanData.rekap.map(r =>
     [r.nama,r.nip,r.pangkat,r.mapel,r.role,r.hadir,r.terlambat,r.sakit,r.izin,r.alfa,r.total_hari_kerja]
     .map(v => `"${(v??'').toString().replace(/"/g,'""')}"`)
@@ -8206,7 +9300,7 @@ async function cetakPDFLaporan() {
 	  const terlambat = detail.filter(r => r.status_kehadiran === 'Terlambat').length;
 	  const sakit     = detail.filter(r => r.status_kehadiran === 'Sakit').length;
 	  const izin      = detail.filter(r => r.status_kehadiran === 'Izin').length;
-	  const alfa      = detail.filter(r => r.status_kehadiran === 'Alfa').length;
+	  const alfa      = detail.filter(r => r.status_kehadiran === 'Alpa').length;
 	  const total     = detail.length;
 
 	  let y = await gambarKop(doc, 10);
@@ -8250,7 +9344,7 @@ async function cetakPDFLaporan() {
 		{ label: 'TERLAMBAT', val: terlambat, fg: C_ORNG,  bg: [255,243,224] },
 		{ label: 'SAKIT',     val: sakit,     fg: C_UNGU,  bg: [232,234,246] },
 		{ label: 'IZIN',      val: izin,      fg: C_BIRU,  bg: [227,242,253] },
-		{ label: 'ALFA',      val: alfa,      fg: C_MERAH, bg: [255,235,238] },
+		{ label: 'ALPA',      val: alfa,      fg: C_MERAH, bg: [255,235,238] },
 	  ];
 	  const boxW = (CW - 4) / 5;
 	  statItems.forEach(({ label, val, fg, bg }, i) => {
@@ -8272,7 +9366,7 @@ async function cetakPDFLaporan() {
 		'Terlambat':        C_ORNG,
 		'Sakit':            C_UNGU,
 		'Izin':             C_BIRU,
-		'Alfa':             C_MERAH,
+		'Alpa':             C_MERAH,
 		'Libur':            C_ABU,
 		'Tidak Ada Jadwal': C_ABU,
 		'Belum Absen':      C_ABU,
