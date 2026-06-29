@@ -9581,11 +9581,8 @@ async function cetakPDFLaporan() {
 
     y = doc.lastAutoTable.finalY + 14;
 
-    // ── Tanda tangan — Kepala Sekolah, tengah halaman ─────────────────
+    /// ── Tanda tangan — Kepala Sekolah (tanpa garis)
     if (y > 245) { doc.addPage(); y = 20; }
-
-    const ttdLebar = 65;
-    const ttdX     = (W - ttdLebar) / 2;  // tengah
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(11);
@@ -9593,9 +9590,25 @@ async function cetakPDFLaporan() {
     doc.text(`${lokasiTtd}, ${tglTtd}`, W / 2, y, { align: 'center' });
     y += 6;
 
-    gambarTTD(doc, ttdX, y, ttdLebar,
-      'Mengetahui,', 'Kepala Sekolah,',
-      kepsekNama, kepsekPangkat, kepsekNIP);
+    doc.text('Mengetahui,',     W / 2, y, { align: 'center' }); y += 5;
+    doc.text('Kepala Sekolah,', W / 2, y, { align: 'center' }); y += 21;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...C_HITAM);
+    doc.text(kepsekNama || '—', W / 2, y, { align: 'center' }); y += 5;
+
+    if (kepsekPangkat) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(...C_ABU);
+      doc.text(kepsekPangkat, W / 2, y, { align: 'center' }); y += 5;
+    }
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(...C_ABU);
+    doc.text('NIP. ' + (kepsekNIP || '—'), W / 2, y, { align: 'center' });
 
     _pdfFileName = `Rekap_Kehadiran_${bulanLabel}_${thn}.pdf`;
   }
